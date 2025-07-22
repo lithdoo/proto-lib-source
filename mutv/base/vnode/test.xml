@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <template>
+
+    </template>
+
+    <bem block="entry-node">
+        <container></container>
+        <header></header>
+        <body></body>
+        <resize-btn></resize-btn>
+    </bem>
+</root>
