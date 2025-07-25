@@ -1,8 +1,8 @@
 import { nanoid } from "nanoid"
 import { MVFileMod, MVFileState, MVRenderMod } from "./base"
 import { MVModTemplate, MVRenderTemplate } from "./template"
-import { MVTemplateComponentType, MVTemplateRoot } from "../mutv-template"
-import { Mut, MutBase } from "../mutv/mut"
+import { MVTemplateComponentType,type MVTemplateRoot } from "../template"
+import { type Mut, MutBase } from "../base/mut"
 import { RenderContext } from "./context"
 import { MVRenderValueStore } from "./store"
 

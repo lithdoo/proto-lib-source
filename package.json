@@ -1,0 +1,16 @@
+{
+  "name": "proto-lib-source",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@antv/x6": "^2.18.1",
+    "fast-xml-parser": "^5.2.5",
+    "insert-css": "^2.0.0"
+  }
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root
+    xmlns:flow="flow"
+    xmlns:bem="bem"
+    xmlns:tag="tag"
+    xmlns:ref="ref"
+    xmlns:text="text"
+    xmlns:attr="attr"
+    xmlns:attr.js="attr.js"
+>
+    <template name="render-icon" argus="">
+        <tag:div bem:entity-node.head-icon="true">
+            <tag:svg bem:entity-node.head-icon-svg="true">
+                <tag:use attr:xlink.href="#vx-base-table" />
+            </tag:svg>
+        </tag:div>
+    </template>
+
+
+    <template name="render-head" argus="entity">
+        <tag:div bem:entity-node.head="true">
+            <ref:render-icon />
+            <text:js>
+                const name = entity.name
+                const label = entity.desc
+                return name + (label ? ` ( ${label} )` : '')
+            </text:js>
+        </tag:div>
+    </template>
+
+    <template name="render-body" argus="entity">
+        <tag:div bem:entity-node.body="true">
+            <flow:loop value="field" js="entity.fields">
+                <ref:render-field props="[field]"></ref:render-field>
+            </flow:loop>
+        </tag:div>
+    </template>
+
+    <template name="render-field" argus="field">
+        <tag:div bem:entity-node.field="true">
+            <tag:div bem:entity-node.field-name="true">
+                <text:js>return field.name</text:js>
+            </tag:div>
+            <tag:div bem:entity-node.field-type="true">
+                <text:js>return field.type</text:js>
+            </tag:div>
+        </tag:div>
+    </template>
+
+    <template name="render-node" argus="entity,render,status">
+        <tag:div bem:entity-node="true">
+            <tag:div bem:entity-node.color="true" />
+            <ref:render-header props="[entity]" />
+            <ref:render-body props="[entity]" />
+        </tag:div>
+    </template>
+
+    <bem block="entity-node">
+        <container></container>
+        <head>
+            <head-icon>
+                <head-icon-svg />
+            </head-icon>
+        </head>
+        <body></body>
+        <resize-btn></resize-btn>
+    </bem>
+</root>

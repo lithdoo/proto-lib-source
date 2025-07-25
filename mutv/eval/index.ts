@@ -21,6 +21,8 @@ export const isEvalVal = (data: any): data is EvalVal => {
     return true
 }
 
+
+
 export const StaticEvalVal: {
     ['null']: EvalVal
     ['blank_string']: EvalVal
