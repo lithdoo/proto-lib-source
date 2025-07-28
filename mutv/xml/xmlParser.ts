@@ -1,21 +1,31 @@
 
 import xmlString from './test.xml?raw'
 
-import type { RefStore, TemplateTree, GlobalDeclare } from '../render'
+import { type RefStore, type TemplateTree, type GlobalDeclare, RenderContext, MVRenderer, type InjectCSS } from '../render'
 import { MVTemplateComponentType, MVTemplateHtmlType, type MVTemplateApply, type MVTemplateContext, type MVTemplateElement, type MVTemplateRoot, type MVTemplateText } from '../template';
 import type { ValueGenerator } from '../base/store';
 import type { EvalVal } from '../eval';
+import { WarpedAttr, WarpedElement, type ParseMod, type XMLParserContext } from './base';
+import { modBem, modFlow, modRef, modTag, modText } from './mods';
+import { MutVal } from '../base/mut';
 
 
-export class XMLParserTask {
+export class XMLParserTask implements XMLParserContext {
     static domParser = new DOMParser();
-    static mods: ParseMod[] = []
+    static mods: ParseMod[] = [
+        modFlow,
+        modRef,
+        modTag,
+        modText,
+        modBem,
+    ]
     root: HTMLElement
 
     mods: Map<string, ParseMod> = new Map()
     store: RefStore = { values: {} }
     template: TemplateTree = { values: {}, children: {} }
-    gloal: GlobalDeclare = { components: {} }
+    global: GlobalDeclare = { components: {} }
+    css: InjectCSS = { values: {} }
 
     constructor(
         public xml: string,
@@ -23,6 +33,7 @@ export class XMLParserTask {
         const xmlDoc = XMLParserTask.domParser.parseFromString(xml, "text/xml");
         this.root = xmlDoc.documentElement
         this.dealRoot()
+
     }
 
     dealRoot() {
@@ -37,14 +48,28 @@ export class XMLParserTask {
 
         const declares = [...this.root.children]
             .filter(v => v.tagName === 'declare')
+            
+        const rootNodes = [...this.root.children]
+            .filter(v => v.tagName !== 'declare')
 
-        declares.forEach(declare => this.dealDeclare(declare))
+        declares.map<[Element[], string]>(declare => [[...declare.children], this.dealDeclare(declare)])
+            .forEach(([children, pid]) => {
+                children.forEach((child: Element) => {
+                    this.dealElement(pid, child)
+                })
+            })
+
+        rootNodes.forEach(node=>{
+            this.dealElement('',node)
+        })
+
+        this.logTemplate()
     }
 
     dealDeclare(element: Element) {
         const name = element.getAttribute('name')
         if (!name) throw new Error()
-        if (this.gloal.components[name]) throw new Error()
+        if (this.global.components[name]) throw new Error()
 
         const template: MVTemplateRoot = {
             id: Math.random().toString(),
@@ -56,201 +81,79 @@ export class XMLParserTask {
                 .filter(v => !!v)
         }
 
-        this.gloal.components[name] = {
+        this.global.components[name] = {
             rootId: template.id,
         }
-        this.template.values[template.id] = template
+        this.template.values[template.id] = template;
+        return template.id
     }
 
+    dealElement(pid: string, element: Element) {
+        const [modName] = element.tagName.split(':')
+            .map(v => v.trim())
+        const mod = this.mods.get(modName)
+        if (!mod) return
+        const warped = new WarpedElement(element)
+        mod.dealElement?.({
+            pid, element: warped, context: this,
+            next: (pid: string, children?: WarpedElement[]) => {
+                let childrenElement = children ?? warped.children()
+                childrenElement.forEach(child => this.dealElement(pid, child.target))
+                element.getAttributeNames()
+                    .map((name) => {
+                        return new WarpedAttr(name, element.getAttribute(name) ?? '')
+                    })
+                    .filter(attr => {
+                        return !!attr.namespace
+                    })
+                    .forEach(attr => {
+                        const mod = this.mods.get(attr.namespace)
+                        if (!mod) return
+                        mod.dealAttr?.({
+                            id: pid,
+                            attr,
+                            context: this
+                        })
+                    })
+            }
+        })
 
 
+    }
 
+    logTemplate() {
+        Object.entries(this.global.components).forEach(([name, option]) => {
+            console.log(`-----component: ${name}-----`)
+            const { rootId } = option
+            const log = (id: string, level = 0) => {
+                const template = this.template.values[id]
+                console.log(`|${new Array(level).fill('-').join('')}${template.type}`)
+                const children = this.template.children[id]
+                if (children) {
+                    children.forEach(id => log(id, level + 1))
+                }
+            }
+            log(rootId)
+        })
+    }
 }
 
 export const test = new XMLParserTask(xmlString)
 
-export class WarpedElement {
-    constructor(
-        public target: HTMLElement
-    ) { }
-
-    get namespace() {
-        const tag = this.target.tagName.split(':')
-        if (tag.length < 2) return ''
-        else return tag[0]
-    }
-    get name() {
-        const tag = this.target.tagName.split(':')
-        return tag[1] ?? tag[0]
-    }
-
-    attr(name: string) {
-        return this.target.getAttribute(name)
-    }
-
-    innerHTML() {
-        return this.target.innerHTML
-    }
-}
-
-
-export class WarpedAttr {
-    constructor(
-        public fullname: string,
-        public value: string
-    ) { }
-
-    get namespace() {
-        const tag = this.fullname.split(':')
-        if (tag.length < 2) return ''
-        else return tag[0]
-    }
-    get name() {
-        const tag = this.fullname.split(':')
-        return tag[1] ?? tag[0]
-    }
-
-
-}
-
-export interface ParseMod {
-    key: string
-
-    dealElement?(context: {
-        pid: string,
-        element: WarpedElement,
-        task: XMLParserTask,
-        next: (id: string) => void
-    }): void
-}
-
-const elementTag = new class implements ParseMod {
-    key = "tag"
-
-    dealElement(context: {
-        pid: string,
-        element: WarpedElement,
-        task: XMLParserTask,
-        next: (id: string) => void
-    }) {
-        const { element, task, pid, next } = context
-        const tagName = element.name
-        const template: MVTemplateElement = {
+const element = new MVRenderer(test)
+    .renderRoot('render-node', new MutVal({
+        entity: {
             id: Math.random().toString(),
-            type: MVTemplateHtmlType.Element,
-            isLeaf: false,
-            tagName,
-            attrs: [] // todo
+            name: 'test_table_node 1',
+            desc: '',
+            fields: new Array(Math.floor(Math.random() * 10 + 1))
+                .fill(0)
+                .map((_, idx) => ({
+                    name: `field ${idx}`,
+                    type: 'type',
+                    desc: ''
+                }))
         }
-
-        task.template.children[pid] = (
-            task.template.children[pid] ?? []
-        ).concat([template.id])
-
-        task.template.values[template.id] = template
-        next(template.id)
-    }
-}
+    }))
 
 
-const elementRef = new class implements ParseMod {
-    key = "ref"
-
-    dealElement(context: {
-        pid: string,
-        element: WarpedElement,
-        task: XMLParserTask,
-        next: (id: string) => void
-    }) {
-        const { element, task, pid, next } = context
-        const componentName = element.name
-
-
-        const bind = element.attr('bind') ?? "{}"
-        const value: EvalVal = {
-            type: 'eval:js',
-            content: `return ${bind}`
-        }
-
-        const ref = Object.entries(task.store.values)
-            .find(([_key, val]) => {
-                return value.type === val.type && value.content === val.content
-            })?.[0]
-        const refKey = ref ?? Math.random().toString()
-
-        task.store.values[refKey] = value
-
-        const templateContext: MVTemplateContext = {
-            id: Math.random().toString(),
-            type: MVTemplateComponentType.Context,
-            isLeaf: false,
-            bind: { '_VALUE_GENERATOR_REFERENCE_': refKey }
-        }
-
-        const templateApply: MVTemplateApply = {
-            id: Math.random().toString(),
-            type: MVTemplateComponentType.Apply,
-            isLeaf: true,
-            rootId: task.gloal.components[componentName].rootId
-        }
-
-
-        task.template.children[pid] = (
-            task.template.children[pid] ?? []
-        ).concat([templateContext.id])
-
-        task.template.children[templateContext.id] = (
-            task.template.children[pid] ?? []
-        ).concat([templateApply.id])
-
-        task.template.values[templateContext.id] = templateContext
-        task.template.values[templateApply.id] = templateApply
-
-        next(templateApply.id)
-    }
-}
-
-
-const elementText = new class implements ParseMod {
-    key = 'text'
-
-    dealElement(context: { pid: string; element: WarpedElement; task: XMLParserTask; next: (id: string) => void; }): void {
-        const { element, task, pid, next } = context
-        const type = element.name
-        if (type === 'js') {
-
-            const value: EvalVal = {
-                type: 'eval:js',
-                content: element.innerHTML()
-            }
-
-            const ref = Object.entries(task.store.values)
-                .find(([_key, val]) => {
-                    return value.type === val.type && value.content === val.content
-                })?.[0]
-            const refKey = ref ?? Math.random().toString()
-
-            task.store.values[refKey] = value
-
-            const template: MVTemplateText = {
-                id: Math.random().toString(),
-                type: MVTemplateHtmlType.Text,
-                text: { '_VALUE_GENERATOR_REFERENCE_': refKey },
-                isLeaf: true,
-            }
-
-            task.template.children[pid] = (
-                task.template.children[pid] ?? []
-            ).concat([template.id])
-
-            task.template.values[template.id] = template
-        } else {
-            throw new Error()
-        }
-
-    }
-}
-
-const elementFlow = new class implements ParseMod {
-    key = 'flow'
-}

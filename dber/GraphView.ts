@@ -84,9 +84,6 @@ export class GraphView {
 }
 
 
-
-
-
 export class ErGraphView extends GraphView implements EntityView {
 
   nodes: EntityNode[] = []

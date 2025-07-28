@@ -234,7 +234,7 @@ export class MVRenderTemplate extends MVRenderMod<MVTemplateTreeData> {
                 const attrs = context.attr(node.attrs)
                 const trans = this.attrTransfer.get(id)
                 const tranAttr = trans ? trans(attrs, (ref) => context.val(ref)) : attrs
-                const innerHTML = node.innerHTML ? context.val(node.innerHTML) :new MutVal(null)
+                const innerHTML = node.innerHTML ? context.val(node.innerHTML) : new MutVal(null)
                 const children = this.renderChildren(id, context)
                 const vnode = new MutViewElement(tagName, tranAttr, children, innerHTML)
                 return vnode
@@ -280,6 +280,7 @@ export class MVRenderTemplate extends MVRenderMod<MVTemplateTreeData> {
 
 
         } catch (e) {
+            console.error(e)
             console.error(node)
         }
 

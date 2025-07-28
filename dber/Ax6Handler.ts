@@ -16,7 +16,7 @@ export abstract class NodeFactory implements NodeRenderFactory {
     static all: Map<string, NodeRenderFactory> = new Map()
     static register(factory: NodeRenderFactory) {
         if (this.all.has(factory.shapeKey))
-            throw new Error(`Node Factory: ${factory.shapeKey} is exist!`)
+           console.warn(`Node Factory: ${factory.shapeKey} is exist!`)
 
         this.all.set(factory.shapeKey, factory)
         Shape.HTML.register({

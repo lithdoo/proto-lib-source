@@ -1,7 +1,8 @@
 import { MutBase, MutTable, MutVal, type Mut } from "../base/mut";
-import { MutViewCondition, MutViewElement, MutViewFragment, MutViewLoop, MutViewNode, MutViewText } from "../base/vnode";
+import { MutViewCondition, MutViewElement, MutViewFragment, MutViewLoop, MutViewNode, MutViewText, WrapedNode } from "../base/vnode";
 import { isEvalRef, StaticEvalVal, type EvalRef, type EvalVal } from "../eval";
 import { isMVTemplateApply, isMVTemplateCond, isMVTemplateContext, isMVTemplateElement, isMVTemplateLoop, isMVTemplateRoot, isMVTemplateText, type MVTemplateNode } from "../template";
+import type { RenderTemplateContext } from "../xml/base";
 
 
 
@@ -23,6 +24,10 @@ export interface GlobalDeclare {
             private?: boolean
         }
     }
+}
+
+export interface InjectCSS {
+    values: { [key: string]: { id: string, content: string } }
 }
 
 
@@ -94,16 +99,21 @@ export class RenderContext {
 
 
     private getJsonVal(json: string) {
-        console.log({ json })
         return new MutVal(JSON.parse(json))
     }
 
     private getScriptVal(script: string) {
-        const argus = Object.entries(this.getState())
-        return new MutVal(
-            new Function(...argus.map(([v]) => v), script)
-                .apply(null, argus.map(([_, v]) => v.val()))
-        )
+
+        try {
+            const argus = Object.entries(this.getState())
+            return new MutVal(
+                new Function(...argus.map(([v]) => v), script)
+                    .apply(null, argus.map(([_, v]) => v.val()))
+            )
+        } catch (e) {
+            console.error({ this: this, script })
+            throw e
+        }
     }
 
     // getTable(): Map<EvalRefId, EvalVal> {
@@ -122,11 +132,13 @@ export class RenderContext {
 export class MVRenderer {
 
     constructor(
-        public store: RefStore,
-        public template: TemplateTree,
-        public global: GlobalDeclare
+        public context: RenderTemplateContext
     ) { }
 
+    get store() { return this.context.store }
+    get template() { return this.context.template }
+    get global() { return this.context.global }
+    get css() { return this.context.css }
 
     createScope() { }
 
@@ -156,7 +168,28 @@ export class MVRenderer {
             this.store, state
         )
 
-        return this.renderNode(node.id, scope)
+        const css = [...Object.values(this.css.values)].map(v => {
+            const { id, content } = v
+            return new MutViewElement(
+                'style',
+                new MutVal({ id: id }),
+                new MutViewFragment(new MutVal([])),
+                new MutVal(content)
+            )
+        }).concat([
+            new MutViewElement(
+                'style',
+                new MutVal({ }),
+                new MutViewFragment(new MutVal([])),
+                new MutVal('*{box-sizing:border-box}')
+            )
+        ])
+
+        return new MutViewFragment(new MutVal([
+            ...css, this.renderNode(node.id, scope)
+        ]))
+
+        // return this.renderNode(node.id, scope)
     }
 
     renderChildren(id: string, context: RenderContext): MutViewFragment {
@@ -166,21 +199,17 @@ export class MVRenderer {
         return fragment
     }
 
-
-
     renderNode(id: string, context: RenderContext): MutViewNode {
         const node = this.template.values[id]
         try {
             if (!node)
                 throw new Error('error node id!')
-
-
             if (isMVTemplateRoot(node)) {
                 const state: Record<string, Mut<unknown>> = node.props
                     .reduce((res, current) => {
                         const val = context.state[current] ?? new MutVal(null)
                         return {
-                            ...res ,[current]:val
+                            ...res, [current]: val
                         }
                     }, {})
 
@@ -193,7 +222,6 @@ export class MVRenderer {
 
             if (isMVTemplateText(node)) {
                 const text = context.val(node.text)
-                console.log({ text, node })
                 const vnode = new MutViewText(text)
                 return vnode
             }
@@ -248,11 +276,55 @@ export class MVRenderer {
 
 
         } catch (e) {
+            console.error(e)
             console.error(node)
         }
-
         return new MutViewText(new MutVal('ERROR'))
-
     }
 
+}
+
+export class RenderRoot {
+    shadow: ShadowRoot
+    viewNode?: MutViewNode
+
+    private updateFn = () => { this.update() }
+    constructor(
+        public cntr = document.createElement('div')
+    ) {
+        this.cntr.style.height = '100%'
+        this.shadow = this.cntr.attachShadow({ mode: 'open' })
+        const style = `<style class="iconfont-inject">.svgfont {display: inline-block;width: 1em;height: 1em;fill: currentColor;vertical-align: -0.1em;font-size:16px;}</style>`
+        const s = document.createElement('div')
+        s.innerHTML = style
+        const nodes = [...document.querySelectorAll('.iconfont-inject'), ...document.head.querySelectorAll('.iconfont-inject')].map(v => v.cloneNode(true))
+        nodes.forEach(v => this.shadow.appendChild(v))
+        this.shadow.appendChild(s)
+    }
+
+    private caches: WrapedNode[] = []
+
+    inject(viewNode: MutViewNode) {
+        console.log({ viewNode })
+        if (this.viewNode) {
+            this.viewNode.target.off(this.updateFn)
+        }
+        this.viewNode = viewNode
+        this.viewNode.target.on(this.updateFn)
+        this.update()
+    }
+
+    update() {
+        const blank = document.createElement('div')
+        this.caches.forEach(node => node.appendTo(blank))
+        this.caches = []
+        this.viewNode?.target.val().forEach(node => {
+            node.appendTo(this.shadow)
+            this.caches.push(node)
+        })
+    }
+
+    element() {
+        return this.cntr
+    }
 }

@@ -2,10 +2,15 @@ import { Shape } from "@antv/x6"
 import { insertCss } from 'insert-css'
 import { NodeFactory } from "./Ax6Handler"
 import type { Cell } from "@antv/x6"
-import { test } from "../mutv/xml/xmlParser";
+import { XMLParserTask } from "../mutv/xml/xmlParser"
+import xmlString from './node.xml?raw'
+import { MVRenderer, RenderRoot } from "../mutv/render"
+import { MutVal } from "../mutv/base/mut"
 
 
-console.log({test}); //
+// console.log({test}); //
+
+export const template = new XMLParserTask(xmlString)
 export type FieldData<Type extends string> = {
     name: string
     desc: string
@@ -59,6 +64,7 @@ export class EntityNode {
     }
 
     container = document.createElement('div')
+    renderRoot = new RenderRoot(this.container)
     status: EntiryStatusData = { isSelected: false, highlightFields: [] }
 
     constructor(
@@ -67,12 +73,20 @@ export class EntityNode {
         public renderData: EntityRenderData
     ) {
         this.updateSize()
+        this.render()
+    }
+
+    render() {
+        const fragment = new MVRenderer(template)
+            .renderRoot('render-node', new MutVal({
+                entity: this.entity
+            }))
+        this.renderRoot.inject(fragment)
     }
 
     updateSize() {
         this.container.style.height = this.height + 'px'
         this.container.style.width = this.width + 'px'
-        this.container.style.background = '#fff'
     }
 
     get height() {

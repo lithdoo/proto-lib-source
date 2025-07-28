@@ -31,32 +31,40 @@
     <declare name="render-body" props="entity">
         <tag:div bem:entity-node.body="true">
             <flow:loop value="field" js="entity.fields">
-                <ref:render-field field="field"></ref:render-field>
+                <ref:render-field bind="{field}"></ref:render-field>
             </flow:loop>
         </tag:div>
     </declare>
 
     <declare name="render-field" props="field">
-        <tag:div bem:entity-node.field="true">
+        <text:js>return "123"</text:js>
+        <!-- <tag:div bem:entity-node.field="true">
             <tag:div bem:entity-node.field-name="true">
                 <text:js>return field.name</text:js>
             </tag:div>
             <tag:div bem:entity-node.field-type="true">
                 <text:js>return field.type</text:js>
             </tag:div>
-        </tag:div>
+        </tag:div> -->
     </declare>
 
-    <declare name="render-node" props="entity,render,status">
+    <declare name="render-node" props="entity">
         <tag:div bem:entity-node="true">
             <tag:div bem:entity-node.color="true" />
-            <ref:render-header bind="{entity}" />
+            <ref:render-head bind="{entity}" />
             <ref:render-body bind="{entity}" />
         </tag:div>
     </declare>
 
     <bem:style block="entity-node">
-        <container></container>
+        <container>
+            <bem:css> 
+                <![CDATA[
+                    这里可以包含一些特殊字符，比如 <tag> 和 & 符号，而不会被解析。
+                    例如：<hello>world</hello> & 这样的内容会被原样保留。
+                ]]>
+            </bem:css>
+        </container>
         <head>
             <head-icon>
                 <head-icon-svg />
