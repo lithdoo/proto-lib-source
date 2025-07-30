@@ -1,10 +1,13 @@
 import { Graph, Node } from '@antv/x6'
-import { EntityNode, type EntityView } from './EntityNode'
+import { EntityNode, type EntityData, type EntityRenderData, type EntityView } from './EntityNode'
 
 export class GraphView {
   outer: HTMLElement = document.createElement('div')
   inner: HTMLElement = document.createElement('div')
   graph?: Graph
+
+
+  log: (type: 'send' | 'recevied', method: string, params: any) => void = () => { }
 
 
 
@@ -91,27 +94,6 @@ export class ErGraphView extends GraphView implements EntityView {
   constructor() {
     super()
     EntityNode.views.set(this.id, this)
-    const nodes = new Array(10).fill(0).map(v => Math.random().toString())
-      .map((id, idx) => new EntityNode(this.id, {
-        id,
-        name: 'test_table_node 1',
-        desc: '',
-        fields: new Array(Math.floor(Math.random() * 10 + 1 ))
-          .fill(0)
-          .map((_,idx)=> ({
-            name: `field ${idx}`,
-            type: 'type',
-            desc: ''
-          }))
-      }, {
-        id,
-        x: idx * 400,
-        y: 0,
-        width: 0,
-        height: 0
-      }))
-
-    this.nodes = nodes
   }
 
   findNode(id: string) {
@@ -125,31 +107,65 @@ export class ErGraphView extends GraphView implements EntityView {
     )
   }
 
+  protected initGraph(): Graph {
+    const graph = super.initGraph()
+    graph.on('node:change:position', ({ node, current }) => {
+      const id = node.getData()?.entity?.id
+      if (!current || !id) {
+        return
+      }
+      this.onClientUpdateNodePos(id, current)
+    })
+    return graph
+  }
+
+
+  messageTimeout: Map<string, any> = new Map()
+  onClientUpdateNodePos(id: string, pos: { x: number, y: number }) {
+    const node = this.nodes.find(v => v.entity.id === id)
+    if (node) {
+      node.renderData.x = pos.x
+      node.renderData.y = pos.y
+    }
+
+    const timeout = this.messageTimeout.get(id)
+    if (timeout) { clearTimeout(timeout) }
+    this.messageTimeout.set(id, setTimeout(() => {
+      this.log('send', 'clientUpdateNodePostion', { id, x: pos.x, y: pos.y })
+      this.messageTimeout.delete(id)
+    }, 100))
+  }
+
+
+  autoFocusTimeout: any = null
+  onServerCreateNode(entity: EntityData, render: EntityRenderData, autoFocus: boolean) {
+    const node = new EntityNode(this.id, entity, render)
+    this.updateNode(node)
+    this.log('recevied', 'serverAddNode', { entity, render })
+    if (autoFocus) {
+      if (this.autoFocusTimeout) clearTimeout(this.autoFocusTimeout)
+      this.autoFocusTimeout = setTimeout(() => {
+        const node = this.graph?.getNodes().find(node => {
+          const data = node.getData()
+          return data.entity.id === entity.id
+        })
+        console.log({ node })
+        if (node) {
+          this.graph?.centerCell(node,{animation:true} as any)
+        }
+      }, 0)
+    }
+  }
+
+  onServerClearGraph() {
+    this.nodes = []
+    this.refresh()
+    this.log('recevied', 'serverClearGraph', [])
+  }
+
+  updateNode(node: EntityNode) {
+    this.nodes = this.nodes.filter(v => v.entity.id !== node.entity.id)
+      .concat(node)
+    this.refresh()
+  }
 }
-// export class ChartGraphView extends GraphView {
-//   static finder: WeakMap<ChartViewState, ChartGraphView> = new WeakMap()
-//   static entity2View(entity: EntityData) {
-//     const x = entity.render.pos_left
-//     const y = entity.render.pos_top
-//     const width = entity.render.size_width
-//     const height = entity.render.size_height
-//     return { x, y, width, height, shape: 'GH_SQLERD_ENTITY_NODE' }
-//   }
-//   constructor(public readonly state: ChartViewState) {
-//     super()
-//   }
-
-//   dispose() {
-//     this.graph?.dispose()
-//     this.state.dispose()
-//   }
-
-//   refresh() {
-//     this.graph?.removeCells(this.graph.getCells())
-//     this.graph?.addNodes(
-//       this.state
-//         .getAllEntities()
-//         .map((node) => Object.assign({}, ChartGraphView.entity2View(node), { data: node }))
-//     )
-//   }
-// }

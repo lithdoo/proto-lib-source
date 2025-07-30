@@ -56,7 +56,6 @@ NodeFactory.register(new class extends NodeFactory {
 export interface EntityView {
     findNode(id: string): EntityNode | void
 }
-
 export class EntityNode {
     static views: Map<string, EntityView> = new Map()
     static find(viewId: string, id: string) {
