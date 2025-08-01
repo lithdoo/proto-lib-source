@@ -89,7 +89,7 @@
                     justify-content: center;
                     height: 32px;
                     flex: 0 0 auto;
-                    line-height: 32px;
+                    line-height:  32px;
                     background: rgb(15 23 42);
                     font-size: 14px;
                     padding: 0 4px;

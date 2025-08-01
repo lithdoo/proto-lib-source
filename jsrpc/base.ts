@@ -1,6 +1,3 @@
-import { readConfigFile } from "typescript"
-
-
 export enum RPCErrorCode {
     ParseError = -32700,
     InvalidRequest = -32600,
@@ -25,7 +22,7 @@ export class RPCError extends Error {
 export interface RPCMethod {
     name: string,
     params?: string[],
-    call: (...argus: any[]) => Promise<{ [key: string]: any }>
+    call: (...argus: any[]) => Promise<any>
 }
 
 export abstract class RPCRequestHandler {
@@ -103,7 +100,7 @@ export abstract class RPCRequestHandler {
 
     abstract error(error: RPCError): RPCError
 
-    abstract success(res: { [key: string]: any }): void
+    abstract success(res: any): void
 
 }
 
