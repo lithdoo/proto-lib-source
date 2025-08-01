@@ -9,10 +9,11 @@ export enum RPCErrorCode {
 
 
 export class RPCError extends Error {
+    timestamp: number = new Date().getTime()
     constructor(
         public code: RPCErrorCode,
         public message: string = '',
-        public data?: any
+        public data?: any,
     ) {
         super(message)
     }
@@ -107,7 +108,7 @@ export abstract class RPCRequestHandler {
 export interface RPCRequest {
     method: string
     params: { [key: string]: any }
-    timeout: number
+    timeout?: number
 }
 
 

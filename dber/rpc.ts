@@ -17,10 +17,22 @@ export class DBERMockServer {
         const [renderer, controller] = RPCMockConnect.twins()
         this.renderer = renderer
         this.controller = controller
+
     }
 
 
-    initController() { }
+    initController() {
+        this.controller
+            .addMethod({
+                name: 'renderer/nodePosChanged',
+                desc: '用户修改节点位置'
+            }, async () => { })
+            .addMethod({
+                name: "renderer/viewPortChanged",
+                desc: '用户修改视窗位置以及大小'
+            }, async () => { })
+
+    }
 
     initRenderer() {
 
@@ -29,25 +41,27 @@ export class DBERMockServer {
             .name('DBERMockServer.Renderer')
             .desc('模拟渲染 RPC 服务')
             .addMethod({
-                name: 'NodeUpdate',
+                name: 'view/nodeUpdate',
                 desc: '添加或全量更新节点',
             }, async () => { })
             .addMethod({
-                name: "ViewClear",
+                name: "view/clear",
                 desc: '清空画布',
             }, async () => { })
             .addMethod({
-                name: "NodeUpdateEntity",
+                name: "view/nodeUpdateEntity",
                 desc: "更新节点结构数据"
             }, async () => { })
             .addMethod({
-                name: "NodeUpdateRender",
+                name: "view/nNodeUpdateRender",
                 desc: "更新节点渲染数据"
             }, async () => { })
             .addMethod({
-                name: "NodeFetchData",
+                name: "view/nodeFetchData",
                 desc: "获取当前客户端节点数据"
             }, async () => { })
+
+
     }
 
 

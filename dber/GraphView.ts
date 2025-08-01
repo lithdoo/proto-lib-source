@@ -116,6 +116,33 @@ export class ErGraphView extends GraphView implements EntityView {
       }
       this.onClientUpdateNodePos(id, current)
     })
+
+    const center = () => {
+      const container = graph.container;
+      const centerX = container.clientWidth / 2;
+      const centerY = container.clientHeight / 2;
+      // 将容器中心点转换为画布坐标
+      const center = graph.graphToLocal(centerX, centerY);
+      const zoom = graph.zoom()
+      this.onClinentViewportChanged(center,zoom)
+    }
+
+    graph.on('scale', (...args) => {
+      console.log('scale')
+      console.log(args)
+      center()
+    })
+    graph.on('resize', (...args) => {
+      console.log('resize')
+      console.log(args)
+      center()
+    })
+    graph.on('translate', (...args) => {
+      console.log('translate')
+      console.log(args)
+      center()
+    })
+      ; (window as any).g = graph
     return graph
   }
 
@@ -151,10 +178,20 @@ export class ErGraphView extends GraphView implements EntityView {
         })
         console.log({ node })
         if (node) {
-          this.graph?.centerCell(node,{animation:true} as any)
+          this.graph?.centerCell(node, { animation: true } as any)
         }
       }, 0)
     }
+  }
+
+  onClinentViewportChanged(center: { x: number, y: number },zoom:number) {
+    const id = 'onClinentViewportChanged'
+    const timeout = this.messageTimeout.get(id)
+    if (timeout) { clearTimeout(timeout) }
+    this.messageTimeout.set(id, setTimeout(() => {
+      this.log('send', 'clinentViewportChanged', { center,zoom})
+      this.messageTimeout.delete(id)
+    }, 100))
   }
 
   onServerClearGraph() {
