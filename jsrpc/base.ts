@@ -41,7 +41,6 @@ export abstract class RPCRequestHandler {
     ) { }
 
 
-
     async parse() {
         try {
             this.json = JSON.parse(this.raw)
