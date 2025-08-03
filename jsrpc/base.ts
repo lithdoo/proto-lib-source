@@ -15,6 +15,7 @@ export class RPCError extends Error {
         public message: string = '',
         public data?: any,
     ) {
+        console.log('message', message)
         super(message)
     }
 }
@@ -31,24 +32,37 @@ export abstract class RPCRequestHandler {
 
     id: string | null = null
     json: { [key: string]: any } = {}
-    method: RPCMethod
+    method?: RPCMethod
     params: string[] = []
 
 
     constructor(
         public raw: string
-    ) {
+    ) { }
 
+
+
+    async parse() {
         try {
-            this.json = JSON.parse(raw)
-            if (!this.json || typeof this.json !== 'object') {
-                throw new Error()
+            this.json = JSON.parse(this.raw)
+            console.log('json',this.json)
+            if ((!this.json) || (typeof this.json !== 'object') || (typeof this.json.method !== 'string')) {
+                if (!this.dealOthers) {
+                    throw new Error()
+                } else {
+                    Promise.resolve(
+                        this.dealOthers(this.json)
+                    ).then(err => {
+                        if (err) throw (err)
+                    }).catch(err => {
+                        throw this.error(err)
+                    })
+
+                }
             }
-        } catch (e) {
-
-            throw this.error(new RPCError(RPCErrorCode.ParseError))
+        } catch (e:any) {
+            throw this.error(new RPCError(RPCErrorCode.ParseError,e.message))
         }
-
         const { jsonrpc, id, method, params } = this.json
 
         this.id = id ?? null
@@ -57,43 +71,55 @@ export abstract class RPCRequestHandler {
             throw this.error(new RPCError(RPCErrorCode.InvalidRequest))
         }
 
-        const rpcMethod = this.getMethod(method)
+        this.method = this.getMethod(method)
 
-        if (!rpcMethod) {
+
+        if (!this.method) {
             throw this.error(new RPCError(RPCErrorCode.MethodNotFound))
-        } else {
-            this.method = method
         }
 
         if (params instanceof Array) {
-            if (params.length < (this.method.params?.length ?? 0)) {
-                throw this.error(new RPCError(RPCErrorCode.InvalidParams))
-            }
+            // if (params.length < (this.method.params?.length ?? 0)) {
+            //     throw this.error(new RPCError(RPCErrorCode.InvalidParams))
+            // }
             this.params = params
         } else if (params instanceof Object) {
             const argus = (this.method.params ?? [])
                 .map(name => params[name])
-            if (argus.includes(undefined)) {
-                throw this.error(new RPCError(RPCErrorCode.InvalidParams))
-            }
+            // if (argus.includes(undefined)) {
+            //     throw this.error(new RPCError(RPCErrorCode.InvalidParams))
+            // }
             this.params = argus
-        } else if (!this.method.params || this.method.params.length === 0) {
+        } else
+        //if (!this.method.params || this.method.params.length === 0) 
+        {
             this.params = []
-        } else {
-            throw this.error(new RPCError(RPCErrorCode.InvalidParams))
         }
+        // else {
+        //     throw this.error(new RPCError(RPCErrorCode.InvalidParams))
+        // }
 
     }
 
 
     async deal() {
         try {
+            await this.parse()
+            if (!this.method) {
+                throw this.error(new RPCError(RPCErrorCode.MethodNotFound))
+            }
             const res = await this.method.call(...this.params)
             this.success(res)
-        } catch (e) {
-            const error = new RPCError(RPCErrorCode.ServerError)
-            this.error(error)
-            throw error
+        } catch (e: any) {
+            if (e instanceof RPCError) {
+                console.error(e)
+                this.error(e)
+            } else {
+                const error = new RPCError(RPCErrorCode.ServerError, e.message)
+                console.error(error)
+                this.error(error)
+            }
+
         }
     }
 
@@ -102,6 +128,10 @@ export abstract class RPCRequestHandler {
     abstract error(error: RPCError): RPCError
 
     abstract success(res: any): void
+
+    dealOthers(json: any): RPCError | Promise<RPCError> | undefined {
+        return new RPCError(RPCErrorCode.ParseError)
+    }
 
 }
 

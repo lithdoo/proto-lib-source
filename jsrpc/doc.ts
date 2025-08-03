@@ -1,10 +1,18 @@
 import type { RPCConnectServer } from "./base";
 
-export type DataType = string | StrctTypeRef | ArrayTypeRef | TupleTypeRef | UnionTypeRef
+export type DataType = string | StrctTypeRef | TableTypeRef | ArrayTypeRef | TupleTypeRef | UnionTypeRef
 
 export type UnionTypeRef = {
     types: DataType[]
     isUnion: true
+}
+
+export type TableTypeRef = {
+    fields: {
+        name: string,
+        type: DataType
+    }[]
+    isTable: true
 }
 
 export type ArrayTypeRef = {
@@ -32,13 +40,14 @@ export type StructDocData = {
 
 export interface ParamDocData {
     name: string
-    desc: string
+    desc: string,
+    type: DataType
 }
 
 export interface MethodDocData {
     name: string,
     desc?: string
-    params?: ParamDocData[],
+    paramsInfo?: ParamDocData[],
     result?: DataType
 }
 
@@ -50,6 +59,21 @@ export interface ServerDocData {
 }
 
 
+export const DocType = {
+    null: 'null',
+    string: 'string',
+    boolean: 'boolean',
+    true: 'true',
+    false: 'false',
+    number: 'number',
+    union(...types: DataType[]): UnionTypeRef { return { types, isUnion: true } },
+    tuple(...types: DataType[]): TupleTypeRef { return { types, isTuple: true } },
+    struct(name: string): StrctTypeRef { return { name, isStruct: true } },
+    array(type: DataType): ArrayTypeRef { return { type, isArray: true } },
+    table(...fields: [string, DataType][]): TableTypeRef { return { fields: fields.map(([name, type]) => ({ name, type })), isTable: true } }
+}
+
+
 export class ServerDoc {
     static table: WeakMap<RPCConnectServer, ServerDocData> = new WeakMap()
 
@@ -57,6 +81,7 @@ export class ServerDoc {
     static tupleRef(...types: DataType[]): TupleTypeRef { return { types, isTuple: true } }
     static structRef(name: string): StrctTypeRef { return { name, isStruct: true } }
     static arrayRef(type: DataType): ArrayTypeRef { return { type, isArray: true } }
+    static baseType(name: 'string' | 'number' | 'boolean' | 'null') { return name }
 
     constructor(public server: RPCConnectServer) {
         ServerDoc.table.set(server, this)

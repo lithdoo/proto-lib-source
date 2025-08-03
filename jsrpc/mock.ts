@@ -31,7 +31,7 @@ export class RPCMockConnect implements RPCConnectServer {
         this.doc.addMethod(info)
         this.methods[info.name] = {
             ...info, call,
-            params: (info.params ?? []).map(v => v.name)
+            params: (info.paramsInfo ?? []).map(v => v.name)
         }
 
         return this
