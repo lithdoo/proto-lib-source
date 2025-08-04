@@ -6,17 +6,12 @@ export class GraphServer {
         render: EntityRenderData
     }[] = []
 
-
     viewport: {
         center: { x: number, y: number }
         zoom: number
     } = { center: { x: 0, y: 0 }, zoom: 1 }
 
-
-    constructor(){
-        
-    }
-
+    constructor(){ }
 
     store() {
         const { nodes, viewport } = this
@@ -29,7 +24,7 @@ export class GraphServer {
         if (!data) return
         const { nodes, viewport } = JSON.parse(data) ?? {}
         if(nodes && viewport){
-            this.nodes = nodes,
+            this.nodes = nodes
             this.viewport = viewport
         }
     }
