@@ -1,4 +1,4 @@
-import { RPCError, RPCErrorCode, RPCMethod, RPCRequestHandler } from "../base"
+import { RPCError, RPCErrorCode, type RPCMethod, RPCRequestHandler } from "../base"
 import type { WsConnectionManager } from "./server"
 
 type RawData = any

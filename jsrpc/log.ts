@@ -1,5 +1,11 @@
 import type { RPCError, RPCRequest } from "./base"
 
+export interface RPCLoggerItem {
+    type: 'recevied' | 'send'
+    method: string,
+    params: any,
+    result: Promise<any>
+}
 
 export interface RPCLog {
     type: 'send' | 'recevied'

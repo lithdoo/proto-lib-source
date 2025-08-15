@@ -1,6 +1,7 @@
-import { RPCConnectClient, RPCRequest } from "../base"
-import { WsConnection, WsConnectionStatus } from "./base"
-import { CrossEnvWebSocket } from "./crossEnv"
+import { RPCError, RPCRequestHandler, type RPCConnectClient, type RPCMethod, type RPCRequest } from "../base"
+import type { RPCLoggerItem } from "../log"
+import { type WsConnection, WsConnectionStatus } from "./base"
+import type { CrossEnvWebSocket } from "./crossEnv"
 
 
 
@@ -80,7 +81,33 @@ export class WsRPCClientConnection extends WsClientConnection implements WsSendC
 
     id: string = null as any
 
-    wst?: CrossEnvWebSocket
+    wst?: CrossEnvWebSocket = undefined
+
+    methods: Map<string, RPCMethod> = new Map()
+
+
+    protected async onRequest(msg: string) {
+        if (!this.wst) return
+
+        const req = new WsPRCClientRequestHandler(
+            msg,
+            this.wst,
+            this.methods
+        )
+
+
+        const mPromise = new ManualPromise()
+
+        this.logger?.({
+            type: 'recevied',
+            method: req.json?.method ?? '<unknown>',
+            params: req.json?.params ?? undefined,
+            result: mPromise.target
+        })
+
+        await req.deal()
+
+    }
 
     protected onOpen(ws: CrossEnvWebSocket): void {
         this.wst = ws
@@ -88,12 +115,12 @@ export class WsRPCClientConnection extends WsClientConnection implements WsSendC
             method: 'connect/id',
             params: [this.id]
         })
-        .then((data:any)=>{
-            if(data?.id){
-                this.id = data.id
-                console.log(this.id)
-            }
-        })
+            .then((data: any) => {
+                if (data?.id) {
+                    this.id = data.id
+                    console.log(this.id)
+                }
+            })
     }
 
     protected onClose(_ws: CrossEnvWebSocket): void {
@@ -108,15 +135,20 @@ export class WsRPCClientConnection extends WsClientConnection implements WsSendC
         }
         const json = JSON.parse(data)
         if (!json) return
-        const { id, result, error } = json
-        const promise = this.reqTable.get(id)
+        const { id, result, error, method } = json
 
-        if (promise && error) {
-            this.reqTable.delete(id)
-            promise.reject(error)
-        } else if (promise) {
-            this.reqTable.delete(id)
-            promise.resolve(result ?? null)
+        if (method) {
+            this.onRequest(data)
+        } else {
+            const promise = this.reqTable.get(id)
+
+            if (promise && error) {
+                this.reqTable.delete(id)
+                promise.reject(error)
+            } else if (promise) {
+                this.reqTable.delete(id)
+                promise.resolve(result ?? null)
+            }
         }
     }
 
@@ -152,4 +184,40 @@ export class WsRPCClientConnection extends WsClientConnection implements WsSendC
     }
 
 
+    logger?: (item: RPCLoggerItem) => void
+}
+
+
+export class WsPRCClientRequestHandler extends RPCRequestHandler {
+
+    constructor(
+        public message: string,
+        public ws: CrossEnvWebSocket,
+        public all: Map<string, RPCMethod>
+    ) {
+        super(message)
+    }
+
+    connectId?: string
+
+    getMethod(name: string): RPCMethod | undefined {
+        return this.all.get(name)
+    }
+
+    success(res: any): void {
+        if (!this.id) return
+        this.ws.send(JSON.stringify({
+            id: this.id,
+            result: res
+        }))
+    }
+
+    error(error: RPCError): RPCError | undefined {
+        if (!this.id) return undefined
+        this.ws.send(JSON.stringify({
+            id: this.id,
+
+        }))
+        return error
+    }
 }

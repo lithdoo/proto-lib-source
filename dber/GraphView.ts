@@ -124,7 +124,7 @@ export class ErGraphView extends GraphView implements EntityView {
       // 将容器中心点转换为画布坐标
       const center = graph.graphToLocal(centerX, centerY);
       const zoom = graph.zoom()
-      this.onClinentViewportChanged(center,zoom)
+      this.onClinentViewportChanged(center, zoom)
     }
 
     graph.on('scale', (...args) => {
@@ -165,6 +165,29 @@ export class ErGraphView extends GraphView implements EntityView {
 
 
   autoFocusTimeout: any = null
+
+
+  onServerUpdateNode(entity: EntityData, autoFocus: boolean) {
+    const oldone = this.nodes.find(v => v.entity.id == entity.id)
+    if (!oldone) return
+    const node = new EntityNode(this.id, entity, oldone.renderData)
+    this.updateNode(node)
+    this.log('recevied', 'serverUpdateNode', { entity })
+    if (autoFocus) {
+      if (this.autoFocusTimeout) clearTimeout(this.autoFocusTimeout)
+      this.autoFocusTimeout = setTimeout(() => {
+        const node = this.graph?.getNodes().find(node => {
+          const data = node.getData()
+          return data.entity.id === entity.id
+        })
+        console.log({ node })
+        if (node) {
+          this.graph?.centerCell(node, { animation: true } as any)
+        }
+      }, 0)
+    }
+  }
+
   onServerCreateNode(entity: EntityData, render: EntityRenderData, autoFocus: boolean) {
     const node = new EntityNode(this.id, entity, render)
     this.updateNode(node)
@@ -184,12 +207,12 @@ export class ErGraphView extends GraphView implements EntityView {
     }
   }
 
-  onClinentViewportChanged(center: { x: number, y: number },zoom:number) {
+  onClinentViewportChanged(center: { x: number, y: number }, zoom: number) {
     const id = 'onClinentViewportChanged'
     const timeout = this.messageTimeout.get(id)
     if (timeout) { clearTimeout(timeout) }
     this.messageTimeout.set(id, setTimeout(() => {
-      this.log('send', 'clinentViewportChanged', { center,zoom})
+      this.log('send', 'clinentViewportChanged', { center, zoom })
       this.messageTimeout.delete(id)
     }, 100))
   }

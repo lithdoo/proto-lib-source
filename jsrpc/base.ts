@@ -124,7 +124,7 @@ export abstract class RPCRequestHandler {
 
     abstract getMethod(name: string): RPCMethod | undefined
 
-    abstract error(error: RPCError): RPCError
+    abstract error(error: RPCError): RPCError  | undefined
 
     abstract success(res: any): void
 

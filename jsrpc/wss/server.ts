@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
-import { WsServerOption } from './createServer';
-import { RPCError, RPCMethod, RPCRequestHandler } from '../base';
-import { WsConnection, WsConnectionStatus, WsOpenRequest } from './base';
+import type { WsServerOption } from './createServer';
+import { RPCError, type RPCMethod, RPCRequestHandler } from '../base';
+import { type WsConnection, WsConnectionStatus, WsOpenRequest } from './base';
 
 
 // ws 中间断联修复
