@@ -122,32 +122,3 @@ export async function createWebSocket(url: string): Promise<CrossEnvWebSocket> {
     }
   }
 }
-
-/**
- * 示例：使用跨环境 WebSocket 客户端
- */
-export async function exampleUsage() {
-  try {
-    const ws = await createWebSocket('wss://echo.websocket.events');
-
-    ws.onopen = () => {
-      console.log('连接已建立');
-      ws.send('Hello, WebSocket!');
-    };
-
-    ws.onmessage = (event) => {
-      console.log('收到消息:', event.data);
-      ws.close();
-    };
-
-    ws.onerror = (event) => {
-      console.error('发生错误:', event);
-    };
-
-    ws.onclose = (event) => {
-      console.log(`连接已关闭: ${event.code} ${event.reason}`);
-    };
-  } catch (error) {
-    console.error('创建 WebSocket 失败:', error);
-  }
-}

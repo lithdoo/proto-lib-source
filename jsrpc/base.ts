@@ -9,6 +9,26 @@ export enum RPCErrorCode {
 
 
 export class RPCError extends Error {
+
+    static ParseError(msg: string = '') {
+        return new RPCError(RPCErrorCode.ParseError)
+    }
+    static InvalidRequest(msg: string = '') {
+        return new RPCError(RPCErrorCode.InvalidRequest)
+    }
+    static MethodNotFound(msg: string = '') {
+        return new RPCError(RPCErrorCode.MethodNotFound)
+    }
+    static InvalidParams(msg: string = '') {
+        return new RPCError(RPCErrorCode.InvalidParams)
+    }
+    static InternalError(msg: string = '') {
+        return new RPCError(RPCErrorCode.InternalError)
+    }
+    static ServerError(msg: string = '') {
+        return new RPCError(RPCErrorCode.ServerError)
+    }
+
     timestamp: number = new Date().getTime()
     constructor(
         public code: RPCErrorCode,
@@ -27,6 +47,77 @@ export interface RPCMethod {
     call: (...argus: any[]) => Promise<any>
 }
 
+
+
+export class RPCMsgHandler {
+    id?: string
+    method?: string
+    params?: any
+    result: any
+    error: any
+
+    parseError?: RPCError
+
+    constructor(public raw: string) { 
+        this.parse()
+    }
+
+    async parse() {
+        try {
+            const json = JSON.parse(this.raw)
+            if (!json || (typeof json !== 'object'))
+                return
+
+            if (json.jsonrpc !== '2.0')
+                return
+
+            this.id = json.id
+            this.method = json.method
+            this.params = json.params
+            this.result = json.result
+            this.error = json.error
+
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    respond(fetchMethod: (method: string) => RPCMethod | void) {
+        console.log()
+        if (!this.method || typeof this.method !== 'string') return
+        const methodName = this.method
+
+        return new Promise(async (res, rej) => {
+            try {
+                const method = fetchMethod(methodName)
+                if (!method) throw RPCError.MethodNotFound()
+
+                const { params } = this
+                let argus = []
+                if (params instanceof Array) {
+                    argus = params
+                } else if (!params) {
+                    argus = []
+                } else if (typeof params === 'object') {
+                    argus = (method.params ?? [])
+                        .map(name => params[name])
+                } else {
+                    argus = [params]
+                }
+                const result = await method.call(...argus)
+                res(result)
+            } catch (e: unknown) {
+                if (e instanceof RPCError) {
+                    rej(e)
+                } else {
+                    rej(RPCError.ServerError())
+                }
+            }
+        })
+    }
+}
+
+
 export abstract class RPCRequestHandler {
     static jsonrpc = "2.0"
 
@@ -44,7 +135,7 @@ export abstract class RPCRequestHandler {
     async parse() {
         try {
             this.json = JSON.parse(this.raw)
-            console.log('json',this.json)
+            console.log('json', this.json)
             if ((!this.json) || (typeof this.json !== 'object') || (typeof this.json.method !== 'string')) {
                 if (!this.dealOthers) {
                     throw new Error()
@@ -59,8 +150,8 @@ export abstract class RPCRequestHandler {
 
                 }
             }
-        } catch (e:any) {
-            throw this.error(new RPCError(RPCErrorCode.ParseError,e.message))
+        } catch (e: any) {
+            throw this.error(new RPCError(RPCErrorCode.ParseError, e.message))
         }
         const { jsonrpc, id, method, params } = this.json
 
@@ -137,6 +228,7 @@ export abstract class RPCRequestHandler {
 export interface RPCRequest {
     method: string
     params: { [key: string]: any }
+    withoutResult?: boolean
     timeout?: number
 }
 

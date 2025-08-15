@@ -1,36 +1,17 @@
 import { Shape } from "@antv/x6"
-import { insertCss } from 'insert-css'
+// import { insertCss } from 'insert-css'
 import { NodeFactory } from "./Ax6Handler"
 import type { Cell } from "@antv/x6"
 import { XMLParserTask } from "../mutv/xml/xmlParser"
 import xmlString from './node.xml?raw'
 import { MVRenderer, RenderRoot } from "../mutv/render"
 import { MutVal } from "../mutv/base/mut"
+import { EntityData, EntityRenderData } from "./base"
 
 
 // console.log({test}); //
 
 export const template = new XMLParserTask(xmlString)
-export type FieldData<Type extends string> = {
-    name: string
-    desc: string
-    type: Type
-}
-
-export type EntityData<Type extends string = string> = {
-    id: string
-    name: string
-    desc: string
-    fields: FieldData<Type>[]
-}
-
-export type EntityRenderData = {
-    id: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-}
 
 export type EntiryStatusData = {
     isSelected: boolean
