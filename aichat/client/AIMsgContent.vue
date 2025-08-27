@@ -1,13 +1,14 @@
 <template>
     <div class="msg-content">
-        <pre>{{ content }}</pre>
+        <div v-if="sseLoading" data-loading-dot="true" class="msg-content__loading">loading</div>
+        <pre v-else>{{ content }}</pre>
     </div>
 </template>
 
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
-import { AIChatMessage } from '../base';
+import type { AIChatMessage } from '../base';
 import { msgbox } from './ChatClient';
 
 const content = ref('')
@@ -21,12 +22,18 @@ const load = async () => {
     content.value = await msgbox.content(prop.msg.msgId)
 }
 
-const sse = computed(()=> msgbox.msgSSE[prop.msg.msgId]?.total)
+const sse = computed(() => msgbox.msgSSE[prop.msg.msgId]?.total)
 
-watch(sse,()=>{
-    if(!sse.value) return
+const sseLoading = computed(() => {
+    return msgbox.msgSSE[prop.msg.msgId] && (!msgbox.msgSSE[prop.msg.msgId].total)
+})
+
+watch(sse, () => {
+    if (!sse.value) return
     content.value = sse.value
 })
+
+
 
 watch(computed(() => prop.msg.msgId), () => load())
 
@@ -39,11 +46,36 @@ load()
 </script>
 
 <style>
-.msg-content{
+.msg-content {
     overflow: hidden;
     word-break: break-all;
     word-wrap: break-word;
-    
 }
 
+[data-loading-dot="true"]{
+    &::after{
+        content:'';
+        animation: dotPulse 1.4s 0.4s infinite ease-in-out;;
+    }
+}
+
+
+/* 省略号动画 */
+@keyframes dotPulse {
+
+    0%,
+    100% {
+        content: '.';
+    }
+
+    30% {
+        
+        content: '..';
+    }
+    
+    66% {
+        
+        content: '...';
+    }
+}
 </style>

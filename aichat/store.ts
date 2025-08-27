@@ -26,12 +26,25 @@ export class AIChatFileStore implements AIChatDataStore {
 
     constructor(
         public targetDir: string
-    ) { }
+    ) {
+        try {
+            fs.accessSync(targetDir)
+        } catch (_e) {
+            fs.mkdirSync(targetDir, { recursive: true })
+        }
+
+    }
 
     loadedRecords: AIChatRecord[] | null = null
     loadedMessage: Map<string, AIChatMessage[]> = new Map()
 
     get recordFilePath() {
+        const recordFilePath = path.join(this.targetDir, 'record.index.json')
+        try {
+            fs.accessSync(recordFilePath)
+        } catch (_e) {
+            fs.writeFileSync(recordFilePath, JSON.stringify([]))
+        }
         return path.join(this.targetDir, 'record.index.json')
     }
 
@@ -77,7 +90,7 @@ export class AIChatFileStore implements AIChatDataStore {
     fetchRecordMessage(recordId: string): AIChatMessage[] {
         const msg = this.loadedMessage.get(recordId)
         if (msg) return msg
-        
+
         const filePath = path.resolve(this.messageDirPath, `${recordId}.json`)
         try {
             fs.accessSync(filePath)
@@ -128,9 +141,15 @@ export class AIChatStreamFileStore extends AIChatFileStore implements AiChartStr
     // 用于控制 chunk 更新频率,并记录当前正处于更新的消息
     updateChunkTimeout = new Map<string, { content: string, timeout: any, total: string }>
 
+    fetchMsgContent(msgId: string) {
+        const timeout = this.updateChunkTimeout.get(msgId)
+        if(timeout) return timeout.total
+        return super.fetchMsgContent(msgId)
+    }
+
 
     fetchRecordMessage(recordId: string) {
-        console.log('fetchRecordMessage',recordId)
+        console.log('fetchRecordMessage', recordId)
         const list = super.fetchRecordMessage(recordId)
         return list.map(v => ({
             ...v,
@@ -143,17 +162,17 @@ export class AIChatStreamFileStore extends AIChatFileStore implements AiChartStr
         return this.updateChunkTimeout.has(msgId)
     }
 
-    
+
     updateRecordMessage(recordId: string, msg: AIChatMessage) {
-        if(msg.unfinished){
+        if (msg.unfinished) {
             msg.unfinished = undefined
-            this.updateChunkTimeout.set(msg.msgId,{
-                content:'',
-                total:'',
-                timeout:null
+            this.updateChunkTimeout.set(msg.msgId, {
+                content: '',
+                total: '',
+                timeout: null
             })
         }
-        super.updateRecordMessage(recordId,msg)
+        super.updateRecordMessage(recordId, msg)
     }
 
 
@@ -162,7 +181,7 @@ export class AIChatStreamFileStore extends AIChatFileStore implements AiChartStr
         const timeout = this.updateChunkTimeout.get(msgId)
         if (!timeout) return
 
-        
+
         timeout.content = timeout.content + content
         if (!timeout.timeout) (
             timeout.timeout = setTimeout(() => {
@@ -178,10 +197,16 @@ export class AIChatStreamFileStore extends AIChatFileStore implements AiChartStr
     finishMessage(msgId: string, recordId: string, error?: string) {
         const timeout = this.updateChunkTimeout.get(msgId)
         if (!timeout) return
+        if (timeout.timeout) {
+            clearTimeout(timeout.timeout)
+            const content = timeout.content
+            this.onMsgChunk?.(msgId, content, false)
+        }
         const total = timeout.total
         this.updateMsgContent(msgId, total)
         this.updateChunkTimeout.delete(msgId)
         this.onMsgChunk?.(msgId, '', true)
+        return total
     }
 
 }

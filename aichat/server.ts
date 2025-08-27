@@ -21,7 +21,7 @@ export class SimServer {
         )=>{
              try {
                 await next();
-            } catch (err) {
+            } catch (err:any) {
                 // 设置响应状态码
                 ctx.status = err.status || 500;
                 // 返回错误信息
@@ -108,6 +108,7 @@ export abstract class AIChatServer extends SimServer {
 
 
         this.router.get('/ai/record/list', (ctx) => {
+            console.log('/ai/record/list')
             const list = this.store.fetchRecordList()
             ctx.body = list
         })

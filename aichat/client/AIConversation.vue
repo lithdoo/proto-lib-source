@@ -12,11 +12,11 @@
                         </div>
                         <div class="chat__bubble chat__bubble--ai">
                             <div class="chat__sender">AI助手</div>
-                            <AIMsgContent :msg="value" @changed="() => scorllToBottom()" ></AIMsgContent>
+                            <AIMsgContent :msg="value" @changed="() => scorllToBottom()"></AIMsgContent>
                         </div>
                     </div>
 
-                    <div class="chat__message chat__message--user" v-if="value.role === 'user'"  :key="value.msgId">
+                    <div class="chat__message chat__message--user" v-if="value.role === 'user'" :key="value.msgId">
                         <div class="chat__bubble chat__bubble--user">
                             <div class="chat__sender">AI助手</div>
                             <AIMsgContent :msg="value" @changed="() => scorllToBottom()"></AIMsgContent>
@@ -32,7 +32,7 @@
         <form class="input-form" id="chat-form">
             <textarea ref="refInput" v-model="inputValue" class="input-form__textarea" id="user-input"
                 placeholder="输入你的问题..." rows="1"></textarea>
-            <button class="input-form__button"  type="button" @click="send">
+            <button class="input-form__button" type="button" @click="send">
                 <i class="fa fa-paper-plane"></i>
             </button>
         </form>
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { AIChatMessage, AIChatRecord } from '../base';
+import { type AIChatMessage, type AIChatRecord } from '../base';
 import AIMsgContent from './AIMsgContent.vue'
 import { msgbox, record } from './ChatClient';
 
@@ -51,7 +51,7 @@ import { msgbox, record } from './ChatClient';
 const prop = defineProps<{ record?: AIChatRecord }>()
 
 const list = computed(() => {
-    if(!prop.record) return []
+    if (!prop.record) return []
     const msgs: AIChatMessage[] = msgbox.msgList[prop.record.recordId] ?? []
     return [...msgs].reverse()
 })
@@ -111,6 +111,7 @@ const send = () => {
 .ai-chat__conversation__outer {
     height: 100%;
     overflow: auto;
+    padding: 0 12px;
 }
 
 .ai-chat__conversation__inner {
