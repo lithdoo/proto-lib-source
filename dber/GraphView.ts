@@ -1,5 +1,6 @@
 import { Graph, Node } from '@antv/x6'
-import { EntityNode, type EntityData, type EntityRenderData, type EntityView } from './EntityNode'
+import { EntityNode, type EntityView } from './EntityNode'
+import { EntityData, EntityRenderData } from './base'
 
 export class GraphView {
   outer: HTMLElement = document.createElement('div')

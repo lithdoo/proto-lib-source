@@ -32,7 +32,11 @@ export const openChrome2 = () => new Promise(async (res) => {
 
 export const getChromePage = async () => {
     const browser = await chromium.connectOverCDP('http://127.0.0.1:9222');
-    const defaultContext = browser.contexts()[0];
+    // const defaultContext =await browser.newContext({
+    //      storageState: { cookies: [],
+    // origins: []},
+    // })
+    const defaultContext = browser.contexts()[0]
     defaultContext.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
     const page = await defaultContext.newPage();
     return page

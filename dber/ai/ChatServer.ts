@@ -4,7 +4,7 @@ import { createServer, WsConnection, WsConnectionStatus, WsRPCServer } from "../
 import { ErdViewState, ViewPort } from "../GraphServer.js";
 import { RPCMethod, RPCRequest } from "@proto-lib/jsrpc/base.js";
 import { DeepSeekMessage, DeepSeekStreamResponse } from "@proto-lib/aichat/node.js";
-import { ChatMsgContext, ConsoleAiChat } from "@proto-lib/aichat/chat.js";
+import { ChatMsgContext, ConsoleAiChat } from "@proto-lib/aichat/console.js";
 import { findNodesByType, parseMarkdownToAST } from "@proto-lib/aichat/MarkdownAst.js";
 import { parseXMLToEntity } from "../xml.js";
 

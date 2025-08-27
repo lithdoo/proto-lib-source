@@ -1,12 +1,7 @@
 import fetch from 'node-fetch';
 import { createInterface } from 'readline';
-
-
-// 定义 DeepSeek API 请求和响应的类型
-export interface DeepSeekMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
+import { DeepSeekMessage } from './base';
+export * from './base'
 
 export interface DeepSeekRequest {
   model: string;
