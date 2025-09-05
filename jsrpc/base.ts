@@ -93,7 +93,7 @@ export class RPCMsgHandler {
                 if (!method) throw RPCError.MethodNotFound()
 
                 const { params } = this
-                let argus = []
+                let argus:any[] = []
                 if (params instanceof Array) {
                     argus = params
                 } else if (!params) {

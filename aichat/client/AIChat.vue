@@ -13,7 +13,6 @@
 
 <script lang="ts" setup>
 
-import { onMounted, ref } from 'vue'
 import AIChatHeader from './AIChatHeader.vue'
 import AIChatBody from './AIChatBody.vue'
 
@@ -24,9 +23,6 @@ if (!document.head.querySelector('link#font-css')) {
     link.id = 'font-css'
     document.head.appendChild(link)
 }
-
-
-
 
 </script>
 

@@ -12,14 +12,17 @@
                         </div>
                         <div class="chat__bubble chat__bubble--ai">
                             <div class="chat__sender">AI助手</div>
-                            <AIMsgContent :msg="value" @changed="() => scorllToBottom()"></AIMsgContent>
+                            <AIMsgContentMarkdown :key="value.msgId" :msg="value"
+                                :check-scroll-bottom="checkScrollBottom" :is-bottom="isBottom" @finish="()=>onFinish(value.msgId)">
+                            </AIMsgContentMarkdown>
                         </div>
                     </div>
 
                     <div class="chat__message chat__message--user" v-if="value.role === 'user'" :key="value.msgId">
                         <div class="chat__bubble chat__bubble--user">
-                            <div class="chat__sender">AI助手</div>
-                            <AIMsgContent :msg="value" @changed="() => scorllToBottom()"></AIMsgContent>
+                            <div class="chat__sender">用户</div>
+                            <AIMsgContent :key="value.msgId" :msg="value" :check-scroll-bottom="checkScrollBottom" @finish="()=>onFinish(value.msgId)">
+                            </AIMsgContent>
                         </div>
                         <div class="chat__avatar chat__avatar--user">
                             <i class="fa fa-robot"></i>
@@ -46,9 +49,13 @@ import { computed, onMounted, ref } from 'vue';
 import { type AIChatMessage, type AIChatRecord } from '../base';
 import AIMsgContent from './AIMsgContent.vue'
 import { msgbox, record } from './ChatClient';
+import AIMsgContentMarkdown from './AIMsgContentMarkdown.vue';
 
 
 const prop = defineProps<{ record?: AIChatRecord }>()
+
+// 用于加载完成滚动到底部
+const finishedMsg = new Set<string>()
 
 const list = computed(() => {
     if (!prop.record) return []
@@ -58,29 +65,39 @@ const list = computed(() => {
 
 const containerRef = ref<HTMLElement | null>(null)
 
-const scorllToBottom = () => {
-    console.log('scorllToBottom')
+const scrollToBottom = (smooth: boolean) => {
     setTimeout(() => {
-        console.log(containerRef.value)
         if (!containerRef.value) return
         containerRef.value.scrollTo({
             top: containerRef.value.scrollHeight,
-            behavior: 'smooth'
+            behavior: smooth ? 'smooth' : undefined
         })
     })
 }
 
+const isBottom = () => {
+    if (!containerRef.value) return true
+    const element = containerRef.value
+    const tolerance = 20
+    // 元素内容总高度（包括不可见部分）
+    const scrollHeight = element.scrollHeight;
+    // 元素的可视高度
+    const clientHeight = element.clientHeight;
+    // 元素已滚动的距离
+    const scrollTop = element.scrollTop;
+    // 当滚动到底部时，scrollTop + clientHeight 约等于 scrollHeight
+    // 考虑到可能存在的浮点精度问题，使用容差范围
+    return scrollTop + clientHeight >= scrollHeight - tolerance;
+}
+
 onMounted(() => {
-    scorllToBottom()
+    scrollToBottom(false)
 })
 
 const refInput = ref<HTMLInputElement>(null as any)
 
 onMounted(() => {
-    // 自动调整文本框高度
-    console.log(refInput.value)
     refInput.value?.addEventListener('input', function () {
-        console.log(123)
         refInput.value.style.height = 'auto';
         refInput.value.style.height = Math.min(refInput.value.scrollHeight, 200) + 'px';
     });
@@ -95,6 +112,21 @@ const send = () => {
     record.send(content)
 }
 
+
+
+const checkScrollBottom = async (todo: () => void, smooth: boolean = true) => {
+    const nowIsBottom = isBottom()
+    todo()
+    await new Promise(res => setTimeout(res))
+    if (nowIsBottom) scrollToBottom(smooth)
+}
+
+
+const onFinish = (msgId: string) => {
+    finishedMsg.add(msgId)
+    const unfinished = list.value.find(v => !finishedMsg.has(v.msgId))
+    if (!unfinished) scrollToBottom(true)
+}
 
 </script>
 

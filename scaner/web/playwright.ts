@@ -1,9 +1,8 @@
 
 import { chromium } from 'playwright';
 import * as  cp from 'child_process';
-import path from 'path';
+import * as path from 'path';
 
-console.log(__dirname)
 
 export const shutdownChrome = () => new Promise(res => {
     const e = cp.exec('taskkill /F /IM "chrome.exe"')

@@ -1,46 +1,29 @@
 <template>
     <div class="msg-content">
-        <div v-if="sseLoading" data-loading-dot="true" class="msg-content__loading">loading</div>
+        <div v-if="content === null" data-loading-dot="true" class="msg-content__loading">loading</div>
         <pre v-else>{{ content }}</pre>
     </div>
 </template>
 
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { ref } from 'vue';
 import type { AIChatMessage } from '../base';
 import { msgbox } from './ChatClient';
 
-const content = ref('')
-const emitter = defineEmits(['changed'])
+const content = ref<string | null>(null)
+const emitter = defineEmits(['finish'])
 
 const prop = defineProps<{
-    msg: AIChatMessage
+    msg: AIChatMessage,
+    checkScrollBottom: (todo: () => void,smooth:boolean ) => void
 }>()
 
 const load = async () => {
-    content.value = await msgbox.content(prop.msg.msgId)
+    const text = (await msgbox.content(prop.msg.msgId)) ?? '<无信息>'
+    content.value = text
+    emitter('finish')
 }
-
-const sse = computed(() => msgbox.msgSSE[prop.msg.msgId]?.total)
-
-const sseLoading = computed(() => {
-    return msgbox.msgSSE[prop.msg.msgId] && (!msgbox.msgSSE[prop.msg.msgId].total)
-})
-
-watch(sse, () => {
-    if (!sse.value) return
-    content.value = sse.value
-})
-
-
-
-watch(computed(() => prop.msg.msgId), () => load())
-
-watch(content, async () => {
-    await nextTick()
-    emitter('changed')
-})
 
 load()
 </script>
@@ -52,10 +35,11 @@ load()
     word-wrap: break-word;
 }
 
-[data-loading-dot="true"]{
-    &::after{
-        content:'';
-        animation: dotPulse 1.4s 0.4s infinite ease-in-out;;
+[data-loading-dot="true"] {
+    &::after {
+        content: '';
+        animation: dotPulse 1.4s 0.4s infinite ease-in-out;
+        ;
     }
 }
 
@@ -69,12 +53,12 @@ load()
     }
 
     30% {
-        
+
         content: '..';
     }
-    
+
     66% {
-        
+
         content: '...';
     }
 }

@@ -116,3 +116,10 @@ export class ServerDoc {
         }
     }
 }
+
+export type DocTypedData<T> = {
+    type: DataType,
+    data: T
+}
+
+export const typed = <T>(type: DataType) => (data: T): DocTypedData<T> => ({ type, data })
