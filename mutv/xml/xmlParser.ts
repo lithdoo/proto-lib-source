@@ -123,11 +123,11 @@ export class XMLParserTask implements XMLParserContext {
 
     logTemplate() {
         Object.entries(this.global.components).forEach(([name, option]) => {
-            console.log(`-----component: ${name}-----`)
+            // console.log(`-----component: ${name}-----`)
             const { rootId } = option
             const log = (id: string, level = 0) => {
                 const template = this.template.values[id]
-                console.log(`|${new Array(level).fill('-').join('')}${template.type}`)
+                // console.log(`|${new Array(level).fill('-').join('')}${template.type}`)
                 const children = this.template.children[id]
                 if (children) {
                     children.forEach(id => log(id, level + 1))

@@ -3,9 +3,9 @@ import { createServer, WsConnection, WsConnectionStatus, WsRPCServer } from "../
 
 import { ErdViewState, ViewPort } from "../GraphServer.js";
 import { RPCMethod, RPCRequest } from "@proto-lib/jsrpc/base.js";
-import { DeepSeekMessage, DeepSeekStreamResponse } from "@proto-lib/aichat/node.js";
-import { ChatMsgContext, ConsoleAiChat } from "@proto-lib/aichat/console.js";
-import { findNodesByType, parseMarkdownToAST } from "@proto-lib/aichat/MarkdownAst.js";
+import { DeepSeekMessage, DeepSeekStreamResponse } from "@proto-lib/aichax/node.js";
+import { ChatMsgContext, ConsoleAiChat } from "@proto-lib/aichax/console.js";
+import { findNodesByType, parseMarkdownToAST } from "@proto-lib/aichax/MarkdownAst.js";
 import { parseXMLToEntity } from "../xml.js";
 
 const log = (text: string) => {
@@ -158,14 +158,12 @@ export class ErdConsoleChartServer extends WsRPCServer<WsRunConnection> {
                 params: actionData
             })
         }
-
         this.state.onNodeInsert = (actionData) => {
             this.broadcast({
                 method: 'dber/broadcastNodeInsert',
                 params: actionData
             })
         }
-
         this.state.onNodeDelete = (actionData) => {
             this.broadcast({
                 method: 'dber/broadcastNodeDelete',

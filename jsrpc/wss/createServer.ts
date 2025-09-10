@@ -14,6 +14,7 @@ export interface WsServerOption {
 }
 
 export const createServer = (option: WsServerOption) => {
+    console.log('createServer')
 
     const { clients, port } = option
 
@@ -70,6 +71,8 @@ export const createServer = (option: WsServerOption) => {
             console.error('WebSocket错误:', error);
         });
     });
+
+    console.log('createServer')
 
     // 启动服务器
     server.listen(port, () => {

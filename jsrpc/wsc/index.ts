@@ -52,6 +52,19 @@ export class WsRPCClient extends WsClient implements RPCConnectClient {
 
     id?: string
 
+    private openPromise: ManualPromise<void>
+
+    get open(){
+        return this.openPromise.target
+    }
+
+    constructor(
+        public url: string
+    ) {
+        super(url)
+        this.openPromise = new ManualPromise()
+    }
+
     protected onOpen(ws: CrossEnvWebSocket): void {
         console.log("WsRPCClient OPEN")
         this.wst = ws
@@ -63,6 +76,7 @@ export class WsRPCClient extends WsClient implements RPCConnectClient {
                 if (data) {
                     this.id = data
                     console.log(this.id)
+                    this.openPromise.resolve()
                 }
             })
     }
@@ -80,6 +94,7 @@ export class WsRPCClient extends WsClient implements RPCConnectClient {
         const msg = new RPCMsgHandler(data.toString())
 
         const res = msg.respond((name) => {
+            console.log('name',name, this.methodTable.get(name))
             return this.methodTable.get(name)
         })
 
@@ -109,6 +124,7 @@ export class WsRPCClient extends WsClient implements RPCConnectClient {
     methodTable: Map<string, RPCMethod> = new Map()
 
     apply(method: RPCMethod) {
+        console.log('apply',method.name, method)
         this.methodTable.set(method.name, method)
         return this
     }
