@@ -12,7 +12,7 @@
                         </div>
                         <div class="chat__bubble chat__bubble--ai">
                             <div class="chat__sender">AI助手</div>
-                            <AIMsgContentMarkdown :key="value.msgId" :msg="value"
+                            <AIMsgContentMarkdown  :model="model" :key="value.msgId" :msg="value"
                                 :check-scroll-bottom="checkScrollBottom" :is-bottom="isBottom"
                                 @finish="() => onFinish(value.msgId)">
                             </AIMsgContentMarkdown>

@@ -101,6 +101,12 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
   }
 
 
+  destroy() {
+    [...LinkNode.views.entries()].forEach(([id, value]) => {
+      if (value === this) LinkNode.views.delete(id)
+    })
+  }
+
   node2x6(renderData: NodeFullData<NodeData>) {
     function height() {
       return Math.min(
@@ -145,8 +151,8 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
   }
 
 
-  
-  protected blockViewPortEvent:boolean = false
+
+  protected blockViewPortEvent: boolean = false
   protected initGraph(): Graph {
     const graph = super.initGraph()
 
@@ -169,7 +175,7 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
 
     let centerTimeout: any = null
     const center = () => {
-      if(this.blockViewPortEvent) return
+      if (this.blockViewPortEvent) return
       const container = graph.container;
       const centerX = container.clientWidth / 2;
       const centerY = container.clientHeight / 2;
@@ -180,8 +186,8 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
       if (
         (this.viewprot.pos.x === center.x) &&
         (this.viewprot.pos.y === center.y) &&
-        (this.viewprot.zoom === zoom) 
-      ){
+        (this.viewprot.zoom === zoom)
+      ) {
         return
       }
 
@@ -242,7 +248,7 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
     })
 
 
-    ;(window as any).wsr = this
+      ; (window as any).wsr = this
   }
 
   initRPC() {
@@ -333,7 +339,18 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
 
   }
 
-  async loadTemplates() {
+  async loadTemplates(clientTemplates?: { [key: string]: string }) {
+    if (clientTemplates) {
+      [...Object.entries(clientTemplates)].map(([name, value]) => {
+        try {
+          this.templates[name] = new XMLParserTask(value as string)
+        } catch (e) {
+          console.error(e)
+          console.error(`XMLParserTask "${name}" Error`)
+        }
+      })
+    } else {
+    }
     const { templates } = (await this.rpc.send({ method: 'linkmap/client/fetchTemplates', params: {} }) ?? {}) as any
       ;
     [...Object.entries(templates)].map(([name, value]) => {
@@ -345,7 +362,6 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
       }
     })
   }
-
 
   updateNodePos(id: string, current: { x: number; y: number }): void {
     super.updateNodePos(id, current)
@@ -380,10 +396,10 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
 
 
   resetViewPort() {
-    this.blockViewPortEvent  = true
+    this.blockViewPortEvent = true
     this.graph.zoomTo(this.viewprot.zoom)
     this.graph.centerPoint(this.viewprot.pos.x, this.viewprot.pos.y)
-    this.blockViewPortEvent  = false
+    this.blockViewPortEvent = false
     console.log('after resetViewPort')
   }
 

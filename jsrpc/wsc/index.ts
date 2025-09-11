@@ -65,6 +65,10 @@ export class WsRPCClient extends WsClient implements RPCConnectClient {
         this.openPromise = new ManualPromise()
     }
 
+    destroy(){
+        if(this.wst) this.wst.close()
+    }
+
     protected onOpen(ws: CrossEnvWebSocket): void {
         console.log("WsRPCClient OPEN")
         this.wst = ws

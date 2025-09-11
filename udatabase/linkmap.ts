@@ -140,7 +140,6 @@ export class ErMapState implements LinkMapState<StructMapData | RelationMapData>
 
     readFromMetaData(data: UDBMetaData) {
         const calcuHeight = (fieldLength: number) => {
-            //     const fieldLength = this.entity.fields.length
             const outerBorder = 6
             const fieldHeight = 30
             const colorBanner = 6
@@ -278,10 +277,9 @@ export class UDBLinkMapServer extends WsRPCServer<WsRunConnection> {
 
     constructor(
         private state: ErMapState,
-        private control: UDBController,
+        private metadata: UDBMetaData,
     ) {
         super()
-        this.state.readFromMetaData(this.control)
         this.init()
     }
 
@@ -334,7 +332,9 @@ export class UDBLinkMapServer extends WsRPCServer<WsRunConnection> {
             })
         }
 
-        this.state.readFromMetaData(this.control)
+        if (this.metadata) {
+            this.state.readFromMetaData(this.metadata)
+        }
     }
     allSocket() {
         const connections = Array.from(this.all.values())
@@ -344,7 +344,7 @@ export class UDBLinkMapServer extends WsRPCServer<WsRunConnection> {
     }
 
     async broadcast(msg: RPCRequest) {
-        console.log('broadcast',msg)
+        console.log('broadcast', msg)
         return new Promise(res => {
             setTimeout(() => {
                 this.allSocket().forEach(socket => {
