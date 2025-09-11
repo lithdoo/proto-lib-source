@@ -10,13 +10,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import type { AIChatMessage } from '../base';
-import { msgbox } from './ChatClient';
 import { CacheRootViewNode, renderer, RootViewNode } from './ASTNode/render';
+import { AIRcordModel } from './ChatClient';
 
 const emitter = defineEmits(['finish'])
 
 const prop = defineProps<{
     msg: AIChatMessage,
+    model:AIRcordModel
     checkScrollBottom: (todo: () => void, smooth: boolean) => void
 }>()
 
@@ -34,8 +35,8 @@ onMounted(() => {
 const showLoading = ref<boolean>(true)
 
 const load = async () => {
-    if (!msgbox.msgSSE[prop.msg.msgId]) {
-        const content = await msgbox.content(prop.msg.msgId)
+    if (!prop.model.msgbox.msgSSE[prop.msg.msgId]) {
+        const content = await prop.model.msgbox.content(prop.msg.msgId)
         if (!content.trim()) {
             errorMsg.value = '生成错误'
         } else {
@@ -43,14 +44,14 @@ const load = async () => {
         }
         showLoading.value = false
     } else {
-        if (msgbox.msgSSE[prop.msg.msgId].total) {
+        if (prop.model.msgbox.msgSSE[prop.msg.msgId].total) {
             showLoading.value = false
         }
     }
     emitter('finish')
 }
 
-const sse = computed(() => msgbox.msgSSE[prop.msg.msgId]?.total ?? '')
+const sse = computed(() => prop.model.msgbox.msgSSE[prop.msg.msgId]?.total ?? '')
 
 
 watch(sse, () => {

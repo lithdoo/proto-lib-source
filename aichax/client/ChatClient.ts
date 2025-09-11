@@ -40,7 +40,7 @@ export class SSEMessage {
 }
 
 
-export const msgbox = reactive(new class {
+export class MsgBox {
     msgList: { [key: string]: AIChatMessage[] } = {}
     msgContent: { [key: string]: string } = {}
     msgSSE: { [key: string]: SSEMessage } = {}
@@ -73,18 +73,18 @@ export const msgbox = reactive(new class {
     }
 
 
-})
+}
 
 
 
-export const record = reactive(new class AIRcordModel implements AIRecords {
+export class AIRcordModel implements AIRecords {
     currentId: string | null = null
     list: AIChatRecord[] = []
-
+    msgbox: MsgBox = reactive(new MsgBox())
 
     async refresh(): Promise<void> {
         if (this.currentId) {
-            msgbox.reload(this.currentId)
+            this.msgbox.reload(this.currentId)
         }
     }
 
@@ -125,15 +125,17 @@ export const record = reactive(new class AIRcordModel implements AIRecords {
         }
         this.refresh()
     }
-})
+}
 
 
-export const newRecord = reactive(new class BlankReocrd implements AIChatRecord {
-    recordId = null as unknown as string
-    title = ''
-    updateTimestamp = new Date().getTime()
-    createTimestamp = new Date().getTime()
-})
+// export const record = reactive(new AIRcordModel)
+
+// export const newRecord = reactive(new class BlankReocrd implements AIChatRecord {
+//     recordId = null as unknown as string
+//     title = ''
+//     updateTimestamp = new Date().getTime()
+//     createTimestamp = new Date().getTime()
+// })
 
 
-record.init()
+// record.init()

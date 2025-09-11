@@ -36,7 +36,13 @@
 <script lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { AIChatRecord } from '../base';
-import { newRecord, record } from './ChatClient';
+export const newRecord = reactive(new class BlankReocrd implements AIChatRecord {
+    recordId = null as unknown as string
+    title = ''
+    updateTimestamp = new Date().getTime()
+    createTimestamp = new Date().getTime()
+})
+
 
 export interface AIRecords {
     currentId: string | null
@@ -142,8 +148,14 @@ class AIRecordControl {
 </script>
 
 <script lang="ts" setup>
+import type { AIRcordModel } from './ChatClient';
 
-const control = reactive(new AIRecordControl(record))
+const props = defineProps<{
+    model: AIRcordModel
+}>()
+
+
+const control = reactive(new AIRecordControl(props.model))
 
 
 onMounted(() => {

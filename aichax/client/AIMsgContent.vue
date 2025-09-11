@@ -9,18 +9,19 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { AIChatMessage } from '../base';
-import { msgbox } from './ChatClient';
+import { AIRcordModel } from './ChatClient';
 
 const content = ref<string | null>(null)
 const emitter = defineEmits(['finish'])
 
 const prop = defineProps<{
     msg: AIChatMessage,
+    model:AIRcordModel
     checkScrollBottom: (todo: () => void,smooth:boolean ) => void
 }>()
 
 const load = async () => {
-    const text = (await msgbox.content(prop.msg.msgId)) ?? '<无信息>'
+    const text = (await prop.model.msgbox.content(prop.msg.msgId)) ?? '<无信息>'
     content.value = text
     emitter('finish')
 }

@@ -13,7 +13,8 @@
                         <div class="chat__bubble chat__bubble--ai">
                             <div class="chat__sender">AI助手</div>
                             <AIMsgContentMarkdown :key="value.msgId" :msg="value"
-                                :check-scroll-bottom="checkScrollBottom" :is-bottom="isBottom" @finish="()=>onFinish(value.msgId)">
+                                :check-scroll-bottom="checkScrollBottom" :is-bottom="isBottom"
+                                @finish="() => onFinish(value.msgId)">
                             </AIMsgContentMarkdown>
                         </div>
                     </div>
@@ -21,7 +22,8 @@
                     <div class="chat__message chat__message--user" v-if="value.role === 'user'" :key="value.msgId">
                         <div class="chat__bubble chat__bubble--user">
                             <div class="chat__sender">用户</div>
-                            <AIMsgContent :key="value.msgId" :msg="value" :check-scroll-bottom="checkScrollBottom" @finish="()=>onFinish(value.msgId)">
+                            <AIMsgContent :model="model" :key="value.msgId" :msg="value"
+                                :check-scroll-bottom="checkScrollBottom" @finish="() => onFinish(value.msgId)">
                             </AIMsgContent>
                         </div>
                         <div class="chat__avatar chat__avatar--user">
@@ -48,18 +50,18 @@
 import { computed, onMounted, ref } from 'vue';
 import { type AIChatMessage, type AIChatRecord } from '../base';
 import AIMsgContent from './AIMsgContent.vue'
-import { msgbox, record } from './ChatClient';
+import { AIRcordModel } from './ChatClient';
 import AIMsgContentMarkdown from './AIMsgContentMarkdown.vue';
 
 
-const prop = defineProps<{ record?: AIChatRecord }>()
+const prop = defineProps<{ record?: AIChatRecord, model: AIRcordModel }>()
 
 // 用于加载完成滚动到底部
 const finishedMsg = new Set<string>()
 
 const list = computed(() => {
     if (!prop.record) return []
-    const msgs: AIChatMessage[] = msgbox.msgList[prop.record.recordId] ?? []
+    const msgs: AIChatMessage[] = prop.model.msgbox.msgList[prop.record.recordId] ?? []
     return [...msgs].reverse()
 })
 
@@ -109,7 +111,7 @@ const inputValue = ref('')
 const send = () => {
     const content = inputValue.value.trim()
     if (!content) return
-    record.send(content)
+    prop.model.send(content)
 }
 
 

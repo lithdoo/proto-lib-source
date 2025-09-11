@@ -1,11 +1,11 @@
 <template>
     <div class="ai-chat">
         <!-- 顶部导航栏 -->
-        <AIChatHeader class="ai-chat__header"></AIChatHeader>
+        <AIChatHeader class="ai-chat__header" :model="model"></AIChatHeader>
 
         <!-- 主要对话区域 -->
 
-        <AIChatBody class="ai-chat__main"></AIChatBody>
+        <AIChatBody class="ai-chat__main" :model="model"></AIChatBody>
 
     </div>
 
@@ -15,6 +15,7 @@
 
 import AIChatHeader from './AIChatHeader.vue'
 import AIChatBody from './AIChatBody.vue'
+import type { AIRcordModel } from './ChatClient'
 
 if (!document.head.querySelector('link#font-css')) {
     const link = document.createElement('link')
@@ -23,6 +24,12 @@ if (!document.head.querySelector('link#font-css')) {
     link.id = 'font-css'
     document.head.appendChild(link)
 }
+
+
+const props = defineProps<{
+    model: AIRcordModel
+}>()
+
 
 </script>
 
@@ -69,5 +76,4 @@ if (!document.head.querySelector('link#font-css')) {
 /* 主内容区样式 */
 // .main {
 //     // flex-grow: 1;
-// }
-</style>
+// }</style>

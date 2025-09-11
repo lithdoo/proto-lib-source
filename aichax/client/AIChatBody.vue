@@ -1,19 +1,27 @@
 <template>
     <!-- 主要对话区域 -->
     <main class="main">
-        <template v-for="value in record.list">
+        <template v-for="value in model.list">
             <keep-alive>
-                <component :is="AIConversation" v-if="value.recordId === record.currentId" :record="value" :key="value.recordId"/>
-                <div v-else ></div>
+                <component :is="AIConversation" :model="model" v-if="value.recordId === model.currentId"
+                    :record="value" :key="value.recordId" />
+                <div v-else></div>
             </keep-alive>
         </template>
 
-        <AIConversation v-if="!record.currentId"></AIConversation>
+        <AIConversation v-if="!model.currentId" :model="model"></AIConversation>
     </main>
 </template>
 
 <script lang="ts" setup>
-import { record } from './ChatClient'
+import type { AIRcordModel } from './ChatClient'
 import AIConversation from './AIConversation.vue'
+
+
+const props = defineProps<{
+    model: AIRcordModel
+}>()
+
+
 
 </script>
