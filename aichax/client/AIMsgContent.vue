@@ -45,6 +45,11 @@ load()
 }
 
 
+pre{
+  white-space: pre-wrap;       /* 保留换行符，同时允许长单词换行到下一行 */
+  word-wrap: break-word;       /* 允许在单词内换行（针对长单词或URL） */
+}
+
 /* 省略号动画 */
 @keyframes dotPulse {
 

@@ -46,6 +46,10 @@ export class MsgBox {
     msgSSE: { [key: string]: SSEMessage } = {}
 
 
+    hasSSE(){
+        return !! [...Object.values(this.msgSSE)].length
+    }
+
     async reload(recordId: string) {
         const res = await fetch(`/ai/message/list/${recordId}`)
         const data = await res.json()

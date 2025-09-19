@@ -12,7 +12,7 @@
                         </div>
                         <div class="chat__bubble chat__bubble--ai">
                             <div class="chat__sender">AI助手</div>
-                            <AIMsgContentMarkdown  :model="model" :key="value.msgId" :msg="value"
+                            <AIMsgContentMarkdown :model="model" :key="value.msgId" :msg="value"
                                 :check-scroll-bottom="checkScrollBottom" :is-bottom="isBottom"
                                 @finish="() => onFinish(value.msgId)">
                             </AIMsgContentMarkdown>
@@ -37,7 +37,7 @@
         <form class="input-form" id="chat-form">
             <textarea ref="refInput" v-model="inputValue" class="input-form__textarea" id="user-input"
                 placeholder="输入你的问题..." rows="1"></textarea>
-            <button class="input-form__button" type="button" @click="send">
+            <button class="input-form__button" type="button" @click="send" :disabled="disabledSend">
                 <i class="fa fa-paper-plane"></i>
             </button>
         </form>
@@ -111,7 +111,13 @@ const inputValue = ref('')
 const send = () => {
     const content = inputValue.value.trim()
     if (!content) return
-    prop.model.send(content)
+    prop.model.send(content).then(() => {
+        inputValue.value = ''
+        setTimeout(() => {
+            refInput.value.style.height = 'auto';
+            refInput.value.style.height = Math.min(refInput.value.scrollHeight, 200) + 'px';
+        })
+    })
 }
 
 
@@ -129,6 +135,10 @@ const onFinish = (msgId: string) => {
     const unfinished = list.value.find(v => !finishedMsg.has(v.msgId))
     if (!unfinished) scrollToBottom(true)
 }
+
+const disabledSend = computed(() => {
+    return prop.model.msgbox.hasSSE()
+})
 
 </script>
 
@@ -279,6 +289,10 @@ const onFinish = (msgId: string) => {
     cursor: pointer;
     transition: background-color 0.3s;
     flex-shrink: 0;
+
+    &[disabled] {
+        opacity: 0.3;
+    }
 }
 
 .input-form__button:hover {
