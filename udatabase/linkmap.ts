@@ -18,7 +18,7 @@ const UDBNodeTemlate: {
     [key in UDBNodeType]: string
 } = {
     [UDBNodeType.Struct]: readFileSync(resolve(__dirname, './struct-node.xml')).toString(),
-    [UDBNodeType.Relation]: readFileSync(resolve(__dirname, './struct-node.xml')).toString()
+    [UDBNodeType.Relation]: readFileSync(resolve(__dirname, './relation-node.xml')).toString()
 }
 
 
@@ -175,7 +175,7 @@ export class ErMapState implements LinkMapState<StructMapData | RelationMapData>
                 const view = {
                     id,
                     ...findOptimalPosition(newList.map(v => v.view), { width: 100, height: 400 }),
-                    width: 260, height: calcuHeight(data.fields.length)
+                    width: 320, height: calcuHeight(data.fields.length)
                 }
 
                 const node = { type, view, data: { ...data, id, type } }
@@ -216,9 +216,6 @@ class WsRunConnection implements WsConnection {
     status = WsConnectionStatus.Pending
     constructor(public id: string) { }
 }
-
-
-
 
 export class UDBLinkMapServer extends WsRPCServer<WsRunConnection> {
 

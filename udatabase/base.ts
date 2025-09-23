@@ -34,14 +34,13 @@ export interface UDBMetaData {
     relations: RelationData[]
 }
 
-
 export const isNull = Symbol()
 export const notNull = Symbol()
 
 
 
 export interface UDBController extends UDBMetaData {
-    find<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; } ): Promise<T | null>
+    find<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; }): Promise<T | null>
     query<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; }): Promise<T[]>
     remove<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; }): Promise<void>
     insert<T = any>(keyName: string, data: T): Promise<void>
@@ -68,3 +67,4 @@ export interface TypeDeal<T extends UDBController> {
     }): any
 
 }
+

@@ -1,10 +1,11 @@
 import path from "path"
-import { BaseType, ExtType, isNull, notNull, RelationData, StructData, TypeDeal, UDBController } from "./base"
-import { accessFile } from "./utils"
+import { BaseType, ExtType, isNull, notNull, RelationData, StructData, TypeDeal, UDBController } from "../base"
+import { accessFile } from "../utils"
 import { readFileSync, writeFileSync } from "fs"
 import * as url from 'url'
 import BetterSqlite3 from 'better-sqlite3'
-import { ManualPromise } from './utils'
+import { ManualPromise } from '../utils'
+import { createDBFile, createTsFile } from "./utils"
 
 
 
@@ -61,7 +62,7 @@ export const sqliteFileTypeDeal: TypeDeal<UDBSqliteController> = {
         return source?.value ?? null
     },
 
-    fromeSave(source, option) {
+    fromeSave(source: any, option: any) {
         if (source) {
             return new SqliteFileValue(
                 option.controller,
@@ -96,6 +97,16 @@ export class UDBSqliteController implements UDBController {
         return path.dirname(this.dbPath)
     }
 
+
+    createNewDBFile() {
+        createDBFile(this.dirPath, this)
+    }
+
+    createTsFile(dir: string) {
+        createTsFile(dir, this)
+    }
+
+
     relativePath(...to: string[]) {
         return path.resolve(this.dirPath, ...to)
     }
@@ -119,7 +130,7 @@ export class UDBSqliteController implements UDBController {
         }
     }
 
-    async find<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; }= {}): Promise<T | null> {
+    async find<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; } = {}): Promise<T | null> {
         const model = [...this.structs, ...this.relations].find(v => v.keyName === keyName)
         if (!model) throw new Error()
         const val = this.dealParamsObj(part, model)
@@ -137,7 +148,7 @@ export class UDBSqliteController implements UDBController {
         return this.get(keyName, where, params)
     }
 
-    async query<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; }= {}): Promise<T[]> {
+    async query<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; } = {}): Promise<T[]> {
         const model = [...this.structs, ...this.relations].find(v => v.keyName === keyName)
         if (!model) throw new Error()
         const val = this.dealParamsObj(part, model)
@@ -155,7 +166,7 @@ export class UDBSqliteController implements UDBController {
         return this.all(keyName, where, params)
     }
 
-    async remove<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; }= {}): Promise<void> {
+    async remove<T = any>(keyName: string, part: { [P in keyof T]?: T[P] | Symbol; } = {}): Promise<void> {
         const model = [...this.structs, ...this.relations].find(v => v.keyName === keyName)
         if (!model) throw new Error()
         const val = this.dealParamsObj(part, model)
@@ -412,3 +423,7 @@ export class SqliteFileValue {
     }
 
 }
+
+
+
+

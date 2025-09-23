@@ -2,9 +2,8 @@
 import xmlString from './test.xml?raw'
 
 import { type RefStore, type TemplateTree, type GlobalDeclare, RenderContext, MVRenderer, type InjectCSS } from '../render'
-import { MVTemplateComponentType, MVTemplateHtmlType, type MVTemplateApply, type MVTemplateContext, type MVTemplateElement, type MVTemplateRoot, type MVTemplateText } from '../template';
-import type { ValueGenerator } from '../base/store';
-import type { EvalVal } from '../eval';
+import { MVTemplateComponentType, type MVTemplateRoot, type MVTemplateText } from '../template';
+
 import { WarpedAttr, WarpedElement, type ParseMod, type XMLParserContext } from './base';
 import { modBem, modFlow, modRef, modTag, modText } from './mods';
 import { MutVal } from '../base/mut';
@@ -48,7 +47,7 @@ export class XMLParserTask implements XMLParserContext {
 
         const declares = [...this.root.children]
             .filter(v => v.tagName === 'declare')
-            
+
         const rootNodes = [...this.root.children]
             .filter(v => v.tagName !== 'declare')
 
@@ -59,8 +58,8 @@ export class XMLParserTask implements XMLParserContext {
                 })
             })
 
-        rootNodes.forEach(node=>{
-            this.dealElement('',node)
+        rootNodes.forEach(node => {
+            this.dealElement('', node)
         })
 
         this.logTemplate()
