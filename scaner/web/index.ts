@@ -20,7 +20,7 @@ export class WebPageScaner {
         this.init()
     }
 
-    shutdown(){
+    shutdown() {
         shutdownChrome()
         WebPageScaner.chrome = undefined
     }
@@ -60,14 +60,22 @@ export class WebPageScaner {
 
     private async deal(task: ScanerTask) {
         try {
+            // await  new Promise(res => setTimeout(res, 1000 * 2000))
             const page = await this.page.target
+
+            // await Promise.race([
+            //     page.goto(task.url, {
+            //         timeout: 0
+            //     }),
+            //     new Promise(res => setTimeout(res, 1000 * 20))
+            // ])
             await page.goto(task.url, {
-                timeout: 1000 * 60 * 2
+                timeout: 1000 * 60 * 20
             })
             if (task.waitForSelector) {
                 await page.waitForSelector(
                     task.waitForSelector,
-                    { timeout: 1000 * 60 * 2 }
+                    { timeout: 1000 * 60 * 20 }
                 )
                 const html = await page.locator('body').first().innerHTML()
                 task.onSuccess(html)

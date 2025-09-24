@@ -151,7 +151,7 @@ export const modText = new class implements ParseMod {
 
             const value: EvalVal = {
                 type: 'eval:js',
-                content: element.innerHTML()
+                content: element.textContent()
             }
 
             const ref = Object.entries(context.store.values)
