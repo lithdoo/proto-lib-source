@@ -3,13 +3,22 @@
     <main class="main">
         <template v-for="value in model.list">
             <keep-alive>
-                <component :is="AIConversation" :model="model" v-if="value.recordId === model.currentId"
-                    :record="value" :key="value.recordId" />
+                <component :is="AIConversation" :model="model" v-if="value.recordId === model.currentId" :record="value"
+                    :key="value.recordId">
+                    <template #input-extra>
+                        <slot name="input-extra"></slot>
+                    </template>
+                </component>
                 <div v-else></div>
             </keep-alive>
         </template>
 
-        <AIConversation v-if="!model.currentId" :model="model"></AIConversation>
+        <AIConversation v-if="!model.currentId" :model="model">
+
+            <template #input-extra>
+                <slot name="input-extra"></slot>
+            </template>
+        </AIConversation>
     </main>
 </template>
 

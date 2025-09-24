@@ -5,7 +5,13 @@
 
         <!-- 主要对话区域 -->
 
-        <AIChatBody class="ai-chat__main" :model="model"></AIChatBody>
+        <AIChatBody class="ai-chat__main" :model="model">
+
+            <template #input-extra>
+                <slot name="input-extra"></slot>
+            </template>
+
+        </AIChatBody>
 
     </div>
 

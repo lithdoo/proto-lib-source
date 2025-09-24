@@ -45,7 +45,8 @@ NodeFactory.register(new class extends NodeFactory {
 export interface LinkMapView<T = unknown> extends LinkMapState<T> {
     // template: { [key: string]: XMLParserTask }
     findNode(id: string): LinkNode<T> | void
-    onNodeEvent ?(payload: any, e: { name: string, $event: Event }) :void
+    onNodeEvent?(payload: any, e: { name: string, $event: Event }): void
+    onNodeRender?(node:LinkNode<T>): void
     clientData?: MutVal<unknown>
 }
 export interface LinkNodeTemplate {
@@ -74,6 +75,7 @@ export class LinkNode<T> {
     render() {
         const view = LinkNode.views.get(this.renderData.viewId)
         if (!view) return
+        view.onNodeRender(this)
         const fragment = new MVRenderer(this.template)
             .renderRoot('render-node', new MutVal({
                 fullData: this.renderData,

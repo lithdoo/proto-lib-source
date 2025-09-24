@@ -46,8 +46,8 @@ export class MsgBox {
     msgSSE: { [key: string]: SSEMessage } = {}
 
 
-    hasSSE(){
-        return !! [...Object.values(this.msgSSE)].length
+    hasSSE() {
+        return !![...Object.values(this.msgSSE)].length
     }
 
     async reload(recordId: string) {
@@ -108,10 +108,18 @@ export class AIRcordModel implements AIRecords {
         // this.send('请生成一个图书管理系统的实体结构')
     }
 
+
+    beforeSend?(content: string): any | false
+    afterSend?(): void
+
     async send(content: string) {
+        const extra = this.beforeSend?.(content)
+        if (extra === false) return
+
         const data = {
             recordId: this.currentId || null,
-            content
+            content,
+            extra
         }
 
         const res = await fetch('/ai/chat', {
@@ -121,7 +129,7 @@ export class AIRcordModel implements AIRecords {
         })
 
         const { recordId } = await res.json()
-
+        this.afterSend()
         if (recordId !== this.currentId) {
             console.log({ recordId })
             await this.loadRecords()
