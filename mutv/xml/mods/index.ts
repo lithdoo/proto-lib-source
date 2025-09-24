@@ -1,10 +1,11 @@
 import type { EvalVal } from "../../eval"
 import { MVTemplateComponentType, type MVTemplateElement, MVTemplateHtmlType, type MVTemplateContext, type MVTemplateApply, type MVTemplateText, type MVTemplateLoop, MVTemplateFlowType, isMVTemplateElement } from "../../template"
 import { WarpedElement, type ParseMod, type WarpedAttr, type XMLParserContext } from "../base"
-import type { XMLParserTask } from "../xmlParser"
 
 export const modTag = new class implements ParseMod {
     key = "tag"
+
+    templates = new Map<string, MVTemplateElement>()
 
     dealElement(option: {
         pid: string,
@@ -12,22 +13,71 @@ export const modTag = new class implements ParseMod {
         context: XMLParserContext,
         next: (id: string) => void
     }) {
+
+
         const { element, context: task, pid, next } = option
-        const tagName = element.name
-        const template: MVTemplateElement = {
-            id: Math.random().toString(),
-            type: MVTemplateHtmlType.Element,
-            isLeaf: false,
-            tagName,
-            attrs: [] // todo
+
+        if (element.name === 'bind' && element.attr('on')) {
+
+            const event = element.attr('on')
+            const template = this.templates.get(pid)
+            console.log({template})
+            if (!template) return
+
+            const value: EvalVal = {
+                type: 'eval:js',
+                content: element.textContent()
+            }
+            const ref = Object.entries(task.store.values)
+                .find(([_key, val]) => {
+                    return value.type === val.type && value.content === val.content
+                })?.[0]
+            const refKey = ref ?? Math.random().toString()
+            task.store.values[refKey] = value
+            template.events = template.events
+                .filter(v => v.name !== event)
+                .concat([{ name: event, value: { '_VALUE_GENERATOR_REFERENCE_': refKey } }])
+
+        } else  if (element.name === 'bind' && element.attr('attr')) {
+
+            const attr = element.attr('attr')
+            const template = this.templates.get(pid)
+            console.log({template})
+            if (!template) return
+
+            const value: EvalVal = {
+                type: 'eval:js',
+                content: element.textContent()
+            }
+            const ref = Object.entries(task.store.values)
+                .find(([_key, val]) => {
+                    return value.type === val.type && value.content === val.content
+                })?.[0]
+            const refKey = ref ?? Math.random().toString()
+            task.store.values[refKey] = value
+            template.attrs = template.attrs
+                .filter(v => v.name !== attr)
+                .concat([{ name: attr, value: { '_VALUE_GENERATOR_REFERENCE_': refKey } }])
+
+        }else {
+            const tagName = element.name
+            const template: MVTemplateElement = {
+                id: Math.random().toString(),
+                type: MVTemplateHtmlType.Element,
+                isLeaf: false,
+                tagName,
+                attrs: [], // todo
+                events: [], // todo
+            }
+
+            task.template.children[pid] = (
+                task.template.children[pid] ?? []
+            ).concat([template.id])
+            this.templates.set(template.id, template)
+            task.template.values[template.id] = template
+            next(template.id)
         }
 
-        task.template.children[pid] = (
-            task.template.children[pid] ?? []
-        ).concat([template.id])
-
-        task.template.values[template.id] = template
-        next(template.id)
     }
 }
 
@@ -56,8 +106,6 @@ export const modRef = new class implements ParseMod {
                 return value.type === val.type && value.content === val.content
             })?.[0]
 
-        console.log(ref)
-
         const refKey = ref ?? Math.random().toString()
 
         task.store.values[refKey] = value
@@ -69,7 +117,6 @@ export const modRef = new class implements ParseMod {
             bind: { '_VALUE_GENERATOR_REFERENCE_': refKey }
         }
 
-        console.log(componentName)
         const templateApply: MVTemplateApply = {
             id: Math.random().toString(),
             type: MVTemplateComponentType.Apply,
@@ -221,7 +268,7 @@ export const modBem = new class implements ParseMod {
         next: (id: string, children?: WarpedElement[]) => void
     }
     ): void {
-        const { pid, element, next,context } = option
+        const { pid, element, next, context } = option
         if (element.name === 'block') {
             const blockName = element.attr('name')
             if (!blockName) return
@@ -247,12 +294,12 @@ export const modBem = new class implements ParseMod {
 
         if (element.name === 'css') {
             const id = Math.random().toString()
-            const className = element.attr('class')??''
-            const textContent = element.textContent()??''
-            if(!className || !textContent) return
+            const className = element.attr('class') ?? ''
+            const textContent = element.textContent() ?? ''
+            if (!className || !textContent) return
 
-            const content = this.replace(textContent,className)
-            context.css.values[id] = {id,content}
+            const content = this.replace(textContent, className)
+            context.css.values[id] = { id, content }
         }
 
     }

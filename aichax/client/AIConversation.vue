@@ -35,11 +35,16 @@
         </div>
         <!-- 输入区域 -->
         <form class="input-form" id="chat-form">
-            <textarea ref="refInput" v-model="inputValue" class="input-form__textarea" id="user-input"
+            <div class="input-extra">
+            </div>
+            <div class="input-main">
+ <textarea ref="refInput" v-model="inputValue" class="input-form__textarea" id="user-input"
                 placeholder="输入你的问题..." rows="1"></textarea>
             <button class="input-form__button" type="button" @click="send" :disabled="disabledSend">
                 <i class="fa fa-paper-plane"></i>
             </button>
+            </div>
+           
         </form>
     </div>
 
@@ -254,13 +259,17 @@ const disabledSend = computed(() => {
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
     position: sticky;
     bottom: 0;
     max-width: 800px;
     margin: 0 auto;
+}
+
+.input-main{
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .input-form__textarea {

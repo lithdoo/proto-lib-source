@@ -149,7 +149,7 @@ export class MVRenderer {
     ) => Mut<{ [key: string]: any; }>
     > = new Map()
 
-    renderRoot(name: string, prop: Mut<unknown>) {
+    renderRoot(name: string, prop: Mut<unknown>,emitter:(payload:any,event:{$event:Event,name:string})=>void) {
         const component = this.global.components[name]
         if (!component) throw new Error('unknown')
 
@@ -173,6 +173,7 @@ export class MVRenderer {
             return new MutViewElement(
                 'style',
                 new MutVal({ id: id }),
+                new MutVal({ }),
                 new MutViewFragment(new MutVal([])),
                 new MutVal(content)
             )
@@ -180,26 +181,27 @@ export class MVRenderer {
             new MutViewElement(
                 'style',
                 new MutVal({ }),
+                new MutVal({ }),
                 new MutViewFragment(new MutVal([])),
                 new MutVal('*{box-sizing:border-box}')
             )
         ])
 
         return new MutViewFragment(new MutVal([
-            ...css, this.renderNode(node.id, scope)
+            ...css, this.renderNode(node.id, scope,emitter)
         ]))
 
         // return this.renderNode(node.id, scope)
     }
 
-    renderChildren(id: string, context: RenderContext): MutViewFragment {
+    renderChildren(id: string, context: RenderContext,emitter:(payload:any,event:{$event:Event,name:string})=>void): MutViewFragment {
         const childIds = this.template.children[id] ?? []
-        const children = childIds.map(id => this.renderNode(id, context))
+        const children = childIds.map(id => this.renderNode(id, context,emitter))
         const fragment = new MutViewFragment(new MutVal(children))
         return fragment
     }
 
-    renderNode(id: string, context: RenderContext): MutViewNode {
+    renderNode(id: string, context: RenderContext,emitter:(payload:any,event:{$event:Event,name:string})=>void): MutViewNode {
         const node = this.template.values[id]
         try {
             if (!node)
@@ -217,7 +219,7 @@ export class MVRenderer {
                     this.store, state
                 )
 
-                return this.renderChildren(node.id, scope)
+                return this.renderChildren(node.id, scope,emitter)
             }
 
             if (isMVTemplateText(node)) {
@@ -229,17 +231,20 @@ export class MVRenderer {
             if (isMVTemplateElement(node)) {
                 const tagName = node.tagName
                 const attrs = context.attr(node.attrs)
+                const events = context.attr(node.events)
+                if(node.events.length) console.log({events})
                 const trans = this.attrTransfer.get(id)
                 const tranAttr = trans ? trans(attrs, (ref) => context.val(ref)) : attrs
                 const innerHTML = node.innerHTML ? context.val(node.innerHTML) : new MutVal(null)
-                const children = this.renderChildren(id, context)
-                const vnode = new MutViewElement(tagName, tranAttr, children, innerHTML)
+                const children = this.renderChildren(id, context,emitter)
+                const vnode = new MutViewElement(tagName, tranAttr,events, children, innerHTML)
+                vnode.emitter = emitter
                 return vnode
             }
 
             if (isMVTemplateCond(node)) {
                 const test = context.val(node.test)
-                const render = () => this.renderChildren(id, context)
+                const render = () => this.renderChildren(id, context,emitter)
                 const vnode = new MutViewCondition(test, render)
                 return vnode
             }
@@ -250,7 +255,7 @@ export class MVRenderer {
                     id, context.extend([
                         { name: node.indexField, value: new MutVal(idx) },
                         { name: node.valueField, value: new MutVal(val) }
-                    ])
+                    ]),emitter
                 )
                 const vnode = new MutViewLoop(list, render)
                 return vnode
@@ -266,12 +271,12 @@ export class MVRenderer {
                 const store = this.store
                 const newContext = new RenderContext(store, state)
 
-                return this.renderChildren(node.id, newContext)
+                return this.renderChildren(node.id, newContext,emitter)
             }
 
             if (isMVTemplateApply(node)) {
                 const rootId = node.rootId
-                return this.renderNode(rootId, context)
+                return this.renderNode(rootId, context,emitter)
             }
 
 

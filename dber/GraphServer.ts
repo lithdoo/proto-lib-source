@@ -5,7 +5,7 @@ export interface ViewPort { pos: { x: number, y: number }, zoom: number }
 
 
 export interface ViewState {
-    viewprot: ViewPort,
+    viewport: ViewPort,
     nodes: { entity: EntityData, render: EntityRenderData }[],
     timestamp: number
 }
@@ -22,15 +22,15 @@ export type ActionData<T> = {
 
 
 export class ErdViewState implements ViewState {
-    viewprot: ViewPort = {
+    viewport: ViewPort = {
         pos: { x: 0, y: 0 }, zoom: 1
     }
     nodes: EntityNodeData[] = []
     timestamp: number = new Date().getTime()
 
     snapshot(): ViewState {
-        const { viewprot, nodes, timestamp } = this
-        return JSON.parse(JSON.stringify({ viewprot, nodes, timestamp }))
+        const { viewport, nodes, timestamp } = this
+        return JSON.parse(JSON.stringify({ viewport, nodes, timestamp }))
     }
 
     action<T>(fn: (state: ViewState) => T): ActionData<T> {
@@ -42,10 +42,10 @@ export class ErdViewState implements ViewState {
     }
 
     onViewChanged?: (data: ActionData<ViewPort>) => void
-    viewChanged(viewprot: ViewPort) {
+    viewChanged(viewport: ViewPort) {
         const actionData = this.action((state) => {
-            this.viewprot = viewprot
-            return viewprot
+            this.viewport = viewport
+            return viewport
         })
         this.onViewChanged?.(actionData)
         return actionData

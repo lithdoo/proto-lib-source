@@ -17,8 +17,31 @@
     </declare>
 
 
-    <declare name="render-head" props="entity">
+    <declare name="render-head" props="entity,view,client">
         <tag:div bem:entity-node.head="true">
+
+            <tag:input>
+                <tag:bind attr="type">return "checkbox"</tag:bind>
+                <tag:bind attr="checked"><![CDATA[
+                
+                const checked = client.computed([],(val)=>{
+                    return val.includes(view.id)
+                })    
+
+                console.log(checked)
+
+                checked.on(()=>{console.log(checked)})
+
+                window.client = client
+                window.checked = checked
+
+                return checked
+                ]]></tag:bind>
+                <tag:bind on="change"><![CDATA[
+              
+                return ["toggleSelectStruct",view.id] 
+                ]]></tag:bind>
+            </tag:input>
             <ref:render-icon />
             <text:js>
                 const name = entity.keyName
@@ -47,10 +70,10 @@
         </tag:div>
     </declare>
 
-    <declare name="render-node" props="fullData">
+    <declare name="render-node" props="fullData,clientData">
         <tag:div bem:entity-node="true">
             <tag:div bem:entity-node.color-bar="true" />
-            <ref:render-head bind="{entity:fullData.data}" />
+            <ref:render-head bind="{entity:fullData.data,view:fullData.view , client:clientData}" />
             <ref:render-body bind="{entity:fullData.data}" />
         </tag:div>
     </declare>
@@ -146,7 +169,7 @@
                     ]]></bem:css>
                 </field-name>
 
-                
+
                 <field-type>
                     <bem:css><![CDATA[ 
                         &{

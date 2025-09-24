@@ -26,7 +26,7 @@ export type NodeFullData<NodeData> = {
 }
 
 export interface LinkMapState<NodeData> {
-    viewprot: ViewPort
+    viewport: ViewPort
     timestamp: number
     nodes: NodeFullData<NodeData>[]
 }

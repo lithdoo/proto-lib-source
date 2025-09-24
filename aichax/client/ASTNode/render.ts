@@ -232,8 +232,6 @@ export class RootViewNode {
         public content: string = ''
     ) {
         this.ast = parseMarkdownToAST(content)
-        console.log(content.length)
-        console.log(this.ast)
         this.target.className = 'markdown-container'
     }
 

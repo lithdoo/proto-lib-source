@@ -36,26 +36,20 @@ export interface StructMapData extends StructData {
     type: 'struct-node'
 }
 
-
 export interface RelationMapData extends RelationData {
     id: string
     type: 'relaction-node'
 }
 
-
-
-
 export class ErMapState implements LinkMapState<StructMapData | RelationMapData> {
-    viewprot: ViewPort = {
-        pos: { x: 0, y: 0 }, zoom: 1
-    }
+    viewport: ViewPort = { pos: { x: 0, y: 0 }, zoom: 1 }
     nodes: NodeFullData<StructMapData | RelationMapData>[] = []
     timestamp: number = new Date().getTime()
     templates: { [key: string]: string } = UDBNodeTemlate
 
     snapshot(): LinkMapState<StructMapData | RelationMapData> {
-        const { viewprot, nodes, timestamp } = this
-        return JSON.parse(JSON.stringify({ viewprot, nodes, timestamp }))
+        const { viewport, nodes, timestamp } = this
+        return JSON.parse(JSON.stringify({ viewport, nodes, timestamp }))
     }
 
     apply<T>(fn: (state: ErMapState) => T, timestamp: number): ActionData<T> {
@@ -66,10 +60,10 @@ export class ErMapState implements LinkMapState<StructMapData | RelationMapData>
         return { data, from, to }
     }
 
-    changeViewPort(viewprot: ViewPort, timestamp: number) {
+    changeViewPort(viewport: ViewPort, timestamp: number) {
         const actionData = this.apply((state) => {
-            this.viewprot = viewprot
-            return viewprot
+            this.viewport = viewport
+            return viewport
         }, timestamp)
         console.log('onViewPortChanged')
         console.log(this.onViewPortChanged)
@@ -133,8 +127,8 @@ export class ErMapState implements LinkMapState<StructMapData | RelationMapData>
     }
 
     fetchState() {
-        const { viewprot, nodes, timestamp } = this
-        return { viewprot, nodes, timestamp }
+        const { viewport, nodes, timestamp } = this
+        return { viewport, nodes, timestamp }
     }
 
 
@@ -204,8 +198,8 @@ export class ErMapState implements LinkMapState<StructMapData | RelationMapData>
     }
 
     saveToTextFile() {
-        const { viewprot, nodes, timestamp } = this
-        const text = JSON.stringify({ viewprot, nodes, timestamp }, null, 2)
+        const { viewport, nodes, timestamp } = this
+        const text = JSON.stringify({ viewport, nodes, timestamp }, null, 2)
         return text
     }
 }

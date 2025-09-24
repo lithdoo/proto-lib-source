@@ -19,6 +19,9 @@
 
     <declare name="render-head" props="entity">
         <tag:div bem:entity-node.head="true">
+            <tag:bind on="click">
+                return null
+            </tag:bind>
             <ref:render-icon />
             <text:js>
                 const name = entity.name

@@ -36,8 +36,27 @@ export class WarpedElement extends WrapedNode {
         this.target.appendChild(fragment)
     }
 
-    attr(key: string, value: string) {
-        this.target.setAttribute(key, value)
+    attr(key: string, value: string | boolean) {
+        console.log(key,value)
+        if (value === true) {
+            this.target.setAttribute(key, 'true')
+             if(key === 'checked'){
+                (this.target as any).checked = true
+            }
+        } else if (value === false) {
+            this.target.removeAttribute(key)
+            if(key === 'checked'){
+                (this.target as any).checked = false
+            }
+        } else {
+            this.target.setAttribute(key, value)
+        }
+    }
+
+    event(key: string, value: (event: Event) => void) {
+        console.log('--------------------------------')
+        console.log(key, value)
+        this.target.addEventListener(key, value)
     }
 
     node() {

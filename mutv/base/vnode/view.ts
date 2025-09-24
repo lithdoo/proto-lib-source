@@ -1,4 +1,4 @@
-import type { Mut } from '../mut'
+import type { Mut, MutBase } from '../mut'
 import { MutVal } from "../mut"
 import { WarpedElement, WarpedText, WrapedNode } from "./wraped"
 
@@ -17,6 +17,7 @@ export class MutViewFragment extends MutViewNode {
     readonly target: MutVal<WrapedNode[]>
     readonly onListChanged: () => void
     readonly onCurrentChanged: () => void
+
 
     constructor(
         public list: Mut<MutViewNode[]>
@@ -58,11 +59,18 @@ export class MutViewElement extends MutViewNode {
     readonly target: Mut<WrapedNode[]>
     readonly onChilrenChanged = () => { this.updateChildren() }
     readonly onAttrChanged = () => { this.updateAttr() }
+    readonly onEventChanged = () => { this.updateEvent() }
     private currentChildren: WrapedNode[] = []
+
+    emitter?: (
+        payload: any,
+        event: { $event: Event, name: string }
+    ) => void
 
     constructor(
         public readonly tagName: string,
-        public readonly attr: Mut<{ [key: string]: string }>,
+        public readonly attr: Mut<{ [key: string]: string | MutVal<string> }>,
+        public readonly event: Mut<{ [key: string]: string }>,
         public readonly children: MutViewFragment,
         public readonly innerHTML: Mut<unknown>
     ) {
@@ -72,7 +80,9 @@ export class MutViewElement extends MutViewNode {
         this.children.target.on(this.onChilrenChanged)
         this.innerHTML.on(this.onChilrenChanged)
         this.attr.on(this.onAttrChanged)
+        this.event.on(this.onEventChanged)
         this.updateChildren()
+        this.updateEvent()
         this.updateAttr()
     }
 
@@ -80,7 +90,27 @@ export class MutViewElement extends MutViewNode {
     private updateAttr() {
         const attr = this.attr.val()
         Object.entries(attr).map(([key, value]) => {
-            this.elementNode.attr(key, value)
+            console.log('key',key)
+            console.log('value',value)
+            console.log('value',(value as any)?.val)
+            if ( (value as MutBase<string>).val) {
+                this.elementNode.attr(key, (value as MutBase<string>).val());
+                (value as MutBase<string>).on(() => { 
+                    console.log('changed')    
+                    this.elementNode.attr(key, (value as MutBase<string>).val()) 
+                })
+            } else {
+                this.elementNode.attr(key, value as string)
+            }
+        })
+    }
+
+    private updateEvent() {
+        const event = this.event.val()
+        Object.entries(event).map(([key, value]) => {
+            this.elementNode.event(key, ($event) => {
+                this.emitter?.(value, { name: key, $event })
+            })
         })
     }
 

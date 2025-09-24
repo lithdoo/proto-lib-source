@@ -16,7 +16,7 @@ export abstract class MutBase<T> implements Mut<T> {
         if (typeof value !== 'object') return []
         return Object.keys(value).map(name => {
             return {
-                name, value: new MutComputed<[unknown], unknown>([val], (t:any) => {
+                name, value: new MutComputed<[unknown], unknown>([val], (t: any) => {
                     return t?.[name]
                 })
             }
@@ -36,6 +36,28 @@ export abstract class MutBase<T> implements Mut<T> {
 
     val() {
         return this.value
+    }
+
+    computed<S extends any[], R>(
+        args: { [K in keyof S]: MutBase<S[K]>; },
+        call: (t: T, ...argus: S) => R
+    ): MutBase<R> {
+
+        const val = () => {
+            const t = this.val()
+            const argus = args.map(v => v.val())
+            return call(t,...argus as any)
+        }
+
+
+        const s =  new MutVal(val());
+
+        [this,...args].forEach(v=>{
+            v.on(()=>{  s.update(val()) })
+        })
+
+        return s
+
     }
 }
 

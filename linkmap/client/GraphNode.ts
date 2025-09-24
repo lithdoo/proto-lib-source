@@ -36,15 +36,17 @@ NodeFactory.register(new class extends NodeFactory {
         const existNode = LinkNode.find(data.viewId, data.view.id)
         if (existNode) {
             return existNode.container
-        }else {
+        } else {
             return createTextNode('Unknown View Node')
         }
     }
 })
 
-export interface LinkMapView<T = unknown>  extends LinkMapState<T> {
+export interface LinkMapView<T = unknown> extends LinkMapState<T> {
     // template: { [key: string]: XMLParserTask }
     findNode(id: string): LinkNode<T> | void
+    onNodeEvent ?(payload: any, e: { name: string, $event: Event }) :void
+    clientData?: MutVal<unknown>
 }
 export interface LinkNodeTemplate {
     template: XMLParserTask
@@ -70,10 +72,15 @@ export class LinkNode<T> {
     }
 
     render() {
+        const view = LinkNode.views.get(this.renderData.viewId)
+        if (!view) return
         const fragment = new MVRenderer(this.template)
             .renderRoot('render-node', new MutVal({
-                fullData: this.renderData
-            }))
+                fullData: this.renderData,
+                clientData: view.clientData
+            }), (payload, e) => {
+                view.onNodeEvent?.(payload, e)
+            })
         this.renderRoot.inject(fragment)
     }
 

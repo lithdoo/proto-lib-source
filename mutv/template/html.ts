@@ -13,6 +13,10 @@ export type MVTemplateElement = MVTemplateGroup & {
     type: MVTemplateHtmlType.Element,
     innerHTML?: EvalRef,
     tagName: string
+    events:  {
+        name: string
+        value: EvalRef
+    }[]
     attrs: {
         name: string
         value: EvalRef

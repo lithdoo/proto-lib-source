@@ -86,7 +86,7 @@ export class GraphView {
 export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView<NodeData> {
 
 
-  viewprot: ViewPort = {
+  viewport: ViewPort = {
     pos: { x: 0, y: 0 }, zoom: 1
   }
   nodes: NodeFullData<NodeData>[] = []
@@ -159,9 +159,7 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
     const posChangeTimeout = new Map<string, any>()
 
     graph.on('node:change:position', ({ node, current }) => {
-      console.log('node:change:position')
       const id = node.getData()?.view?.id
-      console.log('node:change:position', { node, current, id })
       if (!current || !id) {
         return
       }
@@ -184,9 +182,9 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
       const zoom = graph.zoom()
 
       if (
-        (this.viewprot.pos.x === center.x) &&
-        (this.viewprot.pos.y === center.y) &&
-        (this.viewprot.zoom === zoom)
+        (this.viewport.pos.x === center.x) &&
+        (this.viewport.pos.y === center.y) &&
+        (this.viewport.zoom === zoom)
       ) {
         return
       }
@@ -200,15 +198,12 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
     }
 
     graph.on('scale', (...args) => {
-      console.log('scale', args)
       center()
     })
     graph.on('resize', (...args) => {
-      console.log('resize', args)
       center()
     })
     graph.on('translate', (...args) => {
-      console.log('translate', args)
       center()
     })
       ; (window as any).g = graph
@@ -230,8 +225,8 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
   }
 
   updateViewPort(pos: { x: number, y: number }, zoom: number) {
-    this.viewprot.pos = pos
-    this.viewprot.zoom = zoom
+    this.viewport.pos = pos
+    this.viewport.zoom = zoom
   }
 }
 
@@ -277,10 +272,9 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
         name: 'linkmap/broadcast/viewPortChanged',
         params: ['from', 'to', 'data'],
         call: async (from: number, to: number, data: ViewPort) => {
-          console.log('linkmap/broadcast/viewPortChanged')
           if (this.timestamp === to) return
           if (this.timestamp !== from) return this.reloadFromRPC()
-          this.viewprot = data
+          this.viewport = data
           this.timestamp = to
           this.resetViewPort()
         }
@@ -291,7 +285,6 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
         name: 'linkmap/broadcast/nodeViewChanged',
         params: ['from', 'to', 'data'],
         call: async (from: number, to: number, data: NodeViewData) => {
-          console.log('linkmap/broadcast/nodeViewChanged')
           if (this.timestamp === to) return
           if (this.timestamp !== from) return this.reloadFromRPC()
           const node = this.nodes.find(v => v.view.id === data.id)
@@ -351,7 +344,8 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
       })
     } else {
     }
-    const { templates } = (await this.rpc.send({ method: 'linkmap/client/fetchTemplates', params: {} }) ?? {}) as any
+    const res = (await this.rpc.send({ method: 'linkmap/client/fetchTemplates', params: {} }) ?? {}) as any
+    const templates = res?.templates || {}
       ;
     [...Object.entries(templates)].map(([name, value]) => {
       try {
@@ -381,7 +375,7 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
 
   updateViewPort(pos: { x: number; y: number }, zoom: number): void {
     super.updateViewPort(pos, zoom)
-    const data = this.viewprot
+    const data = this.viewport
     const timestamp = this.timestamp
 
     this.rpc.send({
@@ -397,10 +391,13 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
 
   resetViewPort() {
     this.blockViewPortEvent = true
-    this.graph.zoomTo(this.viewprot.zoom)
-    this.graph.centerPoint(this.viewprot.pos.x, this.viewprot.pos.y)
+    try {
+      this.graph.zoomTo(this.viewport.zoom)
+      this.graph.centerPoint(this.viewport.pos.x, this.viewport.pos.y)
+    } catch (e) {
+      console.error(e)
+    }
     this.blockViewPortEvent = false
-    console.log('after resetViewPort')
   }
 
 
@@ -413,7 +410,7 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
     if (isLatest) return
 
     const data: {
-      viewprot: ViewPort;
+      viewport: ViewPort;
       nodes: NodeFullData<NodeData>[];
       timestamp: number
     } = await this.rpc.send({
@@ -421,7 +418,7 @@ export class WsRPCLinkMapGraphView<NodeData> extends LinkMapGraphView<NodeData> 
       params: {}
     }) as any
 
-    this.viewprot = data.viewprot
+    this.viewport = data.viewport
     this.nodes = data.nodes
     this.timestamp = data.timestamp
     this.graphNodes = new Map()
