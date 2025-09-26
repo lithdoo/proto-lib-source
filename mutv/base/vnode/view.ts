@@ -90,13 +90,9 @@ export class MutViewElement extends MutViewNode {
     private updateAttr() {
         const attr = this.attr.val()
         Object.entries(attr).map(([key, value]) => {
-            console.log('key',key)
-            console.log('value',value)
-            console.log('value',(value as any)?.val)
             if ( (value as MutBase<string>).val) {
                 this.elementNode.attr(key, (value as MutBase<string>).val());
                 (value as MutBase<string>).on(() => { 
-                    console.log('changed')    
                     this.elementNode.attr(key, (value as MutBase<string>).val()) 
                 })
             } else {

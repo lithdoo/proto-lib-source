@@ -37,7 +37,6 @@ export class WarpedElement extends WrapedNode {
     }
 
     attr(key: string, value: string | boolean) {
-        console.log(key,value)
         if (value === true) {
             this.target.setAttribute(key, 'true')
              if(key === 'checked'){
@@ -54,8 +53,6 @@ export class WarpedElement extends WrapedNode {
     }
 
     event(key: string, value: (event: Event) => void) {
-        console.log('--------------------------------')
-        console.log(key, value)
         this.target.addEventListener(key, value)
     }
 

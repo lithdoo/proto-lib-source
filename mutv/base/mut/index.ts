@@ -25,7 +25,7 @@ export abstract class MutBase<T> implements Mut<T> {
 
     on(listener: () => void): void {
         this.listeners = this.listeners
-            .filter(v => v === listener)
+            .filter(v => v !== listener)
             .concat([listener])
     }
 
@@ -48,7 +48,6 @@ export abstract class MutBase<T> implements Mut<T> {
             const argus = args.map(v => v.val())
             return call(t,...argus as any)
         }
-
 
         const s =  new MutVal(val());
 

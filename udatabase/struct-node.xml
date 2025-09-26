@@ -23,17 +23,16 @@
             <tag:input>
                 <tag:bind attr="type">return "checkbox"</tag:bind>
                 <tag:bind attr="checked"><![CDATA[
-                
+                console.log(entity)
+
+                if(window.clientdata){
+                    window.clientdata.push(client)
+                }else{
+                    window.clientdata = [client]
+                }
                 const checked = client.computed([],(val)=>{
                     return val.includes(view.id)
                 })    
-
-                console.log(checked)
-
-                checked.on(()=>{console.log(checked)})
-
-                window.client = client
-                window.checked = checked
 
                 return checked
                 ]]></tag:bind>

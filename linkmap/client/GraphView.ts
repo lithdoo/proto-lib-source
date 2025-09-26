@@ -1,8 +1,9 @@
 import { Graph, Node } from '@antv/x6'
 import { LinkMapState, NodeFullData, NodeViewData, ViewPort } from '../base'
-import { LinkMapView, LinkNode } from './GraphNode'
+import { LinkMapView, LinkNode, NodeRenderData } from './GraphNode'
 import { XMLParserTask } from '@proto-lib/mutv/xml/xmlParser'
 import { WsRPCClient } from '@proto-lib/jsrpc/wsc'
+import { MutVal } from '@proto-lib/mutv/base/mut'
 
 export class GraphView {
   outer: HTMLElement = document.createElement('div')
@@ -84,6 +85,15 @@ export class GraphView {
 
 
 export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView<NodeData> {
+  selectKeys = new MutVal<string[]>([])
+    selectNodes = new MutVal<NodeRenderData<any>[]>([])
+    get clientData() {
+        return this.selectKeys
+    }
+
+    selectData() {
+        return this.selectKeys.val()
+    }
 
 
   viewport: ViewPort = {
@@ -105,6 +115,7 @@ export class LinkMapGraphView<NodeData> extends GraphView implements LinkMapView
     [...LinkNode.views.entries()].forEach(([id, value]) => {
       if (value === this) LinkNode.views.delete(id)
     })
+    if(this.outer) this.outer.innerHTML = ''
   }
 
   node2x6(renderData: NodeFullData<NodeData>) {

@@ -75,7 +75,7 @@ export class LinkNode<T> {
     render() {
         const view = LinkNode.views.get(this.renderData.viewId)
         if (!view) return
-        view.onNodeRender(this)
+        view.onNodeRender?.(this)
         const fragment = new MVRenderer(this.template)
             .renderRoot('render-node', new MutVal({
                 fullData: this.renderData,

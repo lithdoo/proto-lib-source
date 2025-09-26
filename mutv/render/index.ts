@@ -232,7 +232,6 @@ export class MVRenderer {
                 const tagName = node.tagName
                 const attrs = context.attr(node.attrs)
                 const events = context.attr(node.events)
-                if(node.events.length) console.log({events})
                 const trans = this.attrTransfer.get(id)
                 const tranAttr = trans ? trans(attrs, (ref) => context.val(ref)) : attrs
                 const innerHTML = node.innerHTML ? context.val(node.innerHTML) : new MutVal(null)
@@ -310,7 +309,6 @@ export class RenderRoot {
     private caches: WrapedNode[] = []
 
     inject(viewNode: MutViewNode) {
-        console.log({ viewNode })
         if (this.viewNode) {
             this.viewNode.target.off(this.updateFn)
         }
