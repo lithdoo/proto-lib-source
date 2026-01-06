@@ -7,12 +7,10 @@ import { readFileSync } from "fs"
 import { resolve } from "path"
 
 
-
 enum UDBNodeType {
     Struct = 'struct-node',
     Relation = 'relaction-node'
 }
-
 
 const UDBNodeTemlate: {
     [key in UDBNodeType]: string
@@ -20,10 +18,6 @@ const UDBNodeTemlate: {
     [UDBNodeType.Struct]: readFileSync(resolve(__dirname, './struct-node.xml')).toString(),
     [UDBNodeType.Relation]: readFileSync(resolve(__dirname, './relation-node.xml')).toString()
 }
-
-
-
-
 
 export type FieldData<Type extends string> = {
     name: string

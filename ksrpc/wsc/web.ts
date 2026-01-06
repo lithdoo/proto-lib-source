@@ -1,8 +1,12 @@
 import { CrossEnvWebSocket, SyncKWSRPC } from './common'
 export * from './common'
+
+
+
 export class SyncAutoReconnectKWSRPC extends SyncKWSRPC {
     id?: string
 
+    status: 'pending' | 'open' | 'closed' = 'pending'
     constructor(public url: string) {
         super()
     }
@@ -17,6 +21,7 @@ export class SyncAutoReconnectKWSRPC extends SyncKWSRPC {
     onOpen?: (wsrpc: this, id: string) => void
 
     protected async onSocketOpen(ws: CrossEnvWebSocket): Promise<string> {
+        if (this.status === 'closed') return
         console.log('onSocketOpen')
         return this
             .request<string>({
@@ -26,15 +31,18 @@ export class SyncAutoReconnectKWSRPC extends SyncKWSRPC {
             .then((id) => {
                 this.id = id
                 this.onOpen?.(this, id)
+                this.status = 'open'
                 return id
             })
     }
 
     protected waittingToReconnect?: Promise<void>
     protected onSocketClose(ws: CrossEnvWebSocket): void {
+        if(this.status === 'closed') return
         if (this.waittingToReconnect) return
 
         this.ws = undefined
+        this.status = 'pending'
 
         if (this.current) {
             this.current.reject(new Error('websocket close'))
@@ -49,13 +57,20 @@ export class SyncAutoReconnectKWSRPC extends SyncKWSRPC {
             this.waittingToReconnect = undefined
         })
     }
+
     open() {
         if (this.ws) { this.ws.close() }
+        if(this.status === 'closed') return
         const ws = this.connect()
         ws.onclose = () => this.onSocketClose(ws)
         ws.onopen = () => this.onSocketOpen(ws)
         ws.onmessage = (ev: any) => this.onMessage(ws, ev)
         this.ws = ws
+    }
+    
+    close(){
+        this.status = 'closed'
+        this.ws?.close()
     }
 }
 

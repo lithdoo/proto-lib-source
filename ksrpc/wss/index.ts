@@ -1,11 +1,10 @@
 import WebSocket, { RawData } from "ws"
 import { KWSRPCServer, WSSConnection } from "./createServer"
 import { CrossEnvWebSocket, SyncKWSRPC } from "../wsc/common"
-import { wrapWebsocket } from "../wsc/node"
 export * from './createServer'
 
 
-interface KWSRPCServerConversation {
+export interface KWSRPCServerConversation {
     id: string
     connect(connection: WSSConnection): void
     disconnect(connection: WSSConnection): void
@@ -43,6 +42,9 @@ export abstract class SyncKWSRPCServerConnection extends SyncKWSRPC implements W
 
 }
 
+
+
+// electron example
 export class KWSRPCServerSingleClientConversation implements KWSRPCServerConversation {
 
     connection?: SyncKWSRPCServerConnection
@@ -112,40 +114,3 @@ export class KWSRPCServerSingleClientConversation implements KWSRPCServerConvers
 
 
 
-const server = new class extends KWSRPCServer<SyncKWSRPCServerConnection> {
-
-    conversations = new Map<string, KWSRPCServerConversation>()
-
-    constructor() {
-        super(6678)
-    }
-
-    createConnect(ws: WebSocket) {
-        const server = this
-        return new class extends SyncKWSRPCServerConnection {
-            constructor() {
-                super(wrapWebsocket(ws))
-            }
-
-            onSocketOpen() { }
-
-            getConversation(id: string): KWSRPCServerConversation {
-                const conversation = server.conversations.get(id)
-                    ?? new KWSRPCServerSingleClientConversation()
-                server.conversations.set(id, conversation)
-                return conversation
-            }
-            onSocketClose(): void {
-                console.log('close')
-                super.onSocketClose?.()
-            }
-            onSocketMessage(data: RawData): void {
-                console.log('data:')
-                console.log(data.toString())
-                super.onSocketMessage?.(data)
-            }
-        }
-    }
-}
-
-server.start()

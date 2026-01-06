@@ -78,15 +78,10 @@ type Tail<Tuple extends any[]> = ((...args: Tuple) => void) extends ((a: any, ..
 type Head<Tuple extends any[]> = Tuple extends [infer Result, ...any[]] ? Result : never
 // (['2','3'],'1') -> ['1','2','3']
 // type Unshift<Tuple extends any[], Element> = ((a: Element, ...args: Tuple) => void) extends ((...args: infer T) => void) ? T : never
-
 type ArrayMut<S extends any[], Upper extends any[] = []> = Head<S> extends never ? Upper : ArrayMut<Tail<S>, [...Upper, Mut<Head<S>>]>
 
-
 // type PickMut<S extends Mut<unknown>> = S extends Mut<infer S> ? S : never
-
 // type PickMutArray<S extends Mut<unknown>[]> = { [Key in keyof S]: PickMut<S[Key]> }
-
-
 
 export class MutComputed<S extends any[], T> extends MutBase<T> {
 

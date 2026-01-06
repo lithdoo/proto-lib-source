@@ -93,6 +93,8 @@ export abstract class KWSRPC extends KWSConnection {
 
         const json = parseRawContent(data)
 
+        console.log(json)
+
         if (json.type === 'response:error' && json.id) {
             const promise = this.reqTable.get(json.id)
             const error = json.error
